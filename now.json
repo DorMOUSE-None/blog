@@ -1,6 +1,6 @@
 {
   "name": "ffutop-blog",
-  "version": 1,
+  "version": 2,
   "builds": [
     { "src": "*.html", "use": "@now/static" },
     { "src": "*.js", "use": "@now/node" },
