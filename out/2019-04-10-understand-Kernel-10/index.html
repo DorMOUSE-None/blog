@@ -1,0 +1,333 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><p>在进行<a href="https://www.ffutop.com/2018-10-12-understand-Kernel-4/">第四篇(任务调度)</a>行文描述时，就一直闹不清内核所谓的<code>task</code>的概念。之前一直将其与进程(process)的概念等同视之。但这又导致了线程的概念无处安置（毕竟在计算机科学的概念中，线程作为进程的子集存在，负责程序执行）。不过，现在这个疑惑总算得到了合理的解释：<strong>我们错误地将理论和实践不加区分地混淆了</strong>。内核开发社区与学术界的合作在整个内核开发历史上并没有想象中的频繁，正相反，学术界对内核代码的贡献不到1%[1]。如果想要将进程/线程的思想代入内核，并逐一印证，那么过程将非常痛苦并最终一无所获。所谓进程/线程，在内核中只有一个概念——执行的上下文(Context of Execution)，任何想要对进程/线程概念进行区分的行为都将是作茧自缚[2]。同时，<code>task</code> 也就是 <code>Context of Execution</code> 概念在实现上的表征。</p>
+<p>&lt;!-- more --&gt;</p>
+<p>执行的上下文(Context of Execution, COE)，记录了所有程序执行中的状态，包括：CPU状态（寄存器信息等）、MMU状态（页映射）、权限状态（uid、gid等）和一些公共属性（打开的文件、信号处理函数等）。对比理论上的进程/线程概念，粗略地讲就是同一线程组的线程各自持有CPU状态而共享其它状态，而认为两进程不共享任何状态。当然，在内核的概念里，进程/线程只是COE共享部分状态中的一个特例。</p>
+<h2>fork, clone</h2>
+<p>如果用进程/线程的概念来看，内核提供了 <code>fork</code> 来完成进程的复制，提供了 <code>clone</code> 来处理线程的拷贝，另外还有 <code>vfork</code> , <code>kernel_thread</code> 等。</p>
+<p><strong>syscall fork</strong></p>
+<pre><code class="hljs"><span class="hljs-function">asmlinkage <span class="hljs-keyword">int</span> <span class="hljs-title">sys_fork</span><span class="hljs-params">(struct pt_regs regs)</span>
+</span>{
+    <span class="hljs-keyword">return</span> do_fork(SIGCHLD, regs.esp, &amp;regs, <span class="hljs-number">0</span>, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);
+}</code></pre><p><strong>syscall clone</strong></p>
+<pre><code class="hljs"><span class="hljs-function">asmlinkage <span class="hljs-keyword">int</span> <span class="hljs-title">sys_clone</span><span class="hljs-params">(struct pt_regs regs)</span>
+</span>{
+    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> clone_flags;
+    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> newsp;
+    <span class="hljs-keyword">int</span> __user *parent_tidptr, *child_tidptr;
+    
+    clone_flags = regs.ebx;
+    newsp = regs.ecx;
+    parent_tidptr = (<span class="hljs-keyword">int</span> __user *)regs.edx;
+    child_tidptr = (<span class="hljs-keyword">int</span> __user *)regs.edi;
+    <span class="hljs-keyword">if</span> (!newsp)
+        newsp = regs.esp;
+    <span class="hljs-keyword">return</span> do_fork(clone_flags, newsp, &amp;regs, <span class="hljs-number">0</span>, parent_tidptr, child_tidptr);
+}</code></pre><p><strong>syscall vfork</strong></p>
+<pre><code class="hljs"><span class="hljs-function">asmlinkage <span class="hljs-keyword">int</span> <span class="hljs-title">sys_vfork</span><span class="hljs-params">(struct pt_regs regs)</span>
+</span>{
+    <span class="hljs-keyword">return</span> do_fork(CLONE_VFORK | CLONE_VM | SIGCHLD, regs.esp, &amp;regs, <span class="hljs-number">0</span>, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);
+}</code></pre><p><strong>kernel function: kernel_thread</strong></p>
+<pre><code class="hljs"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">kernel_thread</span><span class="hljs-params">(<span class="hljs-keyword">int</span> (*fn)(<span class="hljs-keyword">void</span> *), <span class="hljs-keyword">void</span> * arg, <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> flags)</span>
+</span>{
+    <span class="hljs-comment">// ...</span>
+    <span class="hljs-keyword">return</span> do_fork(flags | CLONE_VM | CLONE_UNTRACED, <span class="hljs-number">0</span>, &amp;regs, <span class="hljs-number">0</span>, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);
+}</code></pre><p><code>fork</code>, <code>clone</code>, <code>vfork</code> 的入参怎么和日常使用的系统调用入参不同？且看：</p>
+<pre><code class="hljs">.macro PTREGSCALL label, func, arg
+	.globl \label
+\label:
+	leaq \func(%rip),%rax
+	leaq -ARGOFFSET+8(%rsp),\arg	/* 8 for return address */
+	jmp  ia32_ptregs_common
+	.endm
+
+	CFI_STARTPROC32
+
+	PTREGSCALL stub32_rt_sigreturn, sys32_rt_sigreturn, %rdi
+	PTREGSCALL stub32_sigreturn, sys32_sigreturn, %rdi
+	PTREGSCALL stub32_sigaltstack, sys32_sigaltstack, %rdx
+	PTREGSCALL stub32_sigsuspend, sys32_sigsuspend, %rcx
+	PTREGSCALL stub32_execve, sys32_execve, %rcx
+	PTREGSCALL stub32_fork, sys_fork, %rdi
+	PTREGSCALL stub32_clone, sys32_clone, %rdx
+	PTREGSCALL stub32_vfork, sys_vfork, %rdi
+	PTREGSCALL stub32_iopl, sys_iopl, %rsi
+	PTREGSCALL stub32_rt_sigsuspend, sys_rt_sigsuspend, %rdx
+
+ENTRY(ia32_ptregs_common)
+	popq %r11
+	CFI_ENDPROC
+	CFI_STARTPROC32	simple
+	CFI_SIGNAL_FRAME
+	CFI_DEF_CFA	rsp,SS+8-ARGOFFSET
+	CFI_REL_OFFSET	rax,RAX-ARGOFFSET
+	CFI_REL_OFFSET	rcx,RCX-ARGOFFSET
+	CFI_REL_OFFSET	rdx,RDX-ARGOFFSET
+	CFI_REL_OFFSET	rsi,RSI-ARGOFFSET
+	CFI_REL_OFFSET	rdi,RDI-ARGOFFSET
+	CFI_REL_OFFSET	rip,RIP-ARGOFFSET
+/*	CFI_REL_OFFSET	cs,CS-ARGOFFSET*/
+/*	CFI_REL_OFFSET	rflags,EFLAGS-ARGOFFSET*/
+	CFI_REL_OFFSET	rsp,RSP-ARGOFFSET
+/*	CFI_REL_OFFSET	ss,SS-ARGOFFSET*/
+	SAVE_REST
+	call *%rax
+	RESTORE_REST
+	jmp  ia32_sysret	/* misbalances the return cache */
+	CFI_ENDPROC
+END(ia32_ptregs_common)</code></pre><p>进行系统调用时的处理逻辑统一地将这些内容进行了整合，并将CPU状态（所有通用寄存器状态）维护到 <code>struct pt_regs</code> 数据块中。总结起来，三种系统调用最终都委托给 <code>do_fork</code> 进行实现，只是在参数的选择方面做了不同的预处理。这在用户层的函数原型上就更为明显，<code>fork</code> 和 <code>vfork</code> 都不允许参数的调用。</p>
+<pre><code class="hljs"><span class="hljs-keyword">pid_t</span> fork(<span class="hljs-keyword">void</span>);
+
+<span class="hljs-comment">/* for x86-32 */</span>
+<span class="hljs-function"><span class="hljs-keyword">long</span> <span class="hljs-title">clone</span><span class="hljs-params">(<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> flags, <span class="hljs-keyword">void</span> *child_stack,
+        <span class="hljs-keyword">int</span> *ptid, <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> newtls,
+        <span class="hljs-keyword">int</span> *ctid)</span></span>;
+
+<span class="hljs-keyword">pid_t</span> vfork(<span class="hljs-keyword">void</span>);</code></pre><p>再看看 <code>flags</code> 有哪些值可选。</p>
+<pre><code class="hljs"><span class="hljs-comment">/*
+ * cloning flags:
+ */</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CSIGNAL		0x000000ff	<span class="hljs-comment">/* signal mask to be sent at exit */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_VM	0x00000100	<span class="hljs-comment">/* set if VM shared between processes */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_FS	0x00000200	<span class="hljs-comment">/* set if fs info shared between processes */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_FILES	0x00000400	<span class="hljs-comment">/* set if open files shared between processes */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_SIGHAND	0x00000800	<span class="hljs-comment">/* set if signal handlers and blocked signals shared */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_PTRACE	0x00002000	<span class="hljs-comment">/* set if we want to let tracing continue on the child too */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_VFORK	0x00004000	<span class="hljs-comment">/* set if the parent wants the child to wake it up on mm_release */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_PARENT	0x00008000	<span class="hljs-comment">/* set if we want to have the same parent as the cloner */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_THREAD	0x00010000	<span class="hljs-comment">/* Same thread group? */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_NEWNS	0x00020000	<span class="hljs-comment">/* New namespace group? */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_SYSVSEM	0x00040000	<span class="hljs-comment">/* share system V SEM_UNDO semantics */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_SETTLS	0x00080000	<span class="hljs-comment">/* create a new TLS for the child */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_PARENT_SETTID	0x00100000	<span class="hljs-comment">/* set the TID in the parent */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_CHILD_CLEARTID	0x00200000	<span class="hljs-comment">/* clear the TID in the child */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_DETACHED		0x00400000	<span class="hljs-comment">/* Unused, ignored */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_UNTRACED		0x00800000	<span class="hljs-comment">/* set if the tracing process can't force CLONE_PTRACE on this clone */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_CHILD_SETTID	0x01000000	<span class="hljs-comment">/* set the TID in the child */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_STOPPED		0x02000000	<span class="hljs-comment">/* Start in stopped state */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_NEWUTS		0x04000000	<span class="hljs-comment">/* New utsname group? */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_NEWIPC		0x08000000	<span class="hljs-comment">/* New ipcs */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_NEWUSER		0x10000000	<span class="hljs-comment">/* New user namespace */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_NEWPID		0x20000000	<span class="hljs-comment">/* New pid namespace */</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> CLONE_NEWNET		0x40000000	<span class="hljs-comment">/* New network namespace */</span></span></code></pre><p><code>xxx shared between processes</code> ，描述即将被创建的新任务将进行哪些状态/资源的共享，而哪些状态需要进行拷贝。</p>
+<h3><code>do_fork</code></h3>
+<p>先看看核心的 <code>do_fork</code> 的逻辑。</p>
+<p><em>Hint: 下列代码经过大量的删减</em></p>
+<pre><code class="hljs"><span class="hljs-function"><span class="hljs-keyword">long</span> <span class="hljs-title">do_fork</span><span class="hljs-params">(<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> clone_flags,
+        <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> stack_start,
+        struct pt_regs *regs,
+        <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> stack_size,
+        <span class="hljs-keyword">int</span> __user *parent_tidptr,
+        <span class="hljs-keyword">int</span> __user *child_tidptr)</span>
+</span>{
+    p = copy_process(clone_flags, stack_start, regs, stack_size, child_tidptr, <span class="hljs-literal">NULL</span>);
+    <span class="hljs-keyword">if</span> (!IS_ERR(p)) {
+        nr = (clone_flags &amp; CLONE_NEWPID) ?
+            task_pid_nr_ns(p, current-&gt;nsproxy-&gt;pid_ns) :
+                task_pid_vnr(p);
+        <span class="hljs-keyword">if</span> (!(clone_flags &amp; CLONE_STOPPED))
+            wake_up_new_task(p, clone_flags);
+        <span class="hljs-keyword">else</span>
+            p-&gt;state = TASK_STOPPED;
+    } <span class="hljs-keyword">else</span> {
+        nr = PTR_ERR(p);
+    }
+    <span class="hljs-keyword">return</span> nr;
+}</code></pre><pre><code class="hljs"><span class="hljs-function"><span class="hljs-keyword">static</span> struct task_struct *<span class="hljs-title">copy_process</span><span class="hljs-params">(<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> clone_flags,
+                    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> stack_start,
+                    struct pt_regs *regs,
+                    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">long</span> stack_size,
+                    <span class="hljs-keyword">int</span> __user *child_tidptr,
+                    struct pid *pid)</span>
+</span>{
+    <span class="hljs-comment">/* 预分配 task_struct 数据结构空间 */</span>
+    retval = security_task_create(clone_flags);
+    <span class="hljs-comment">/* 复制 current 的 task_struct 数据结构 */</span>
+    p = dup_task_struct(current);
+
+    <span class="hljs-keyword">if</span> (nr_threads &gt;= max_threads)
+    	<span class="hljs-keyword">goto</span> bad_fork_cleanup_count;
+
+    <span class="hljs-comment">/* 针对多核CPU，为新任务分配CPU */</span>
+    sched_fork(p, clone_flags);
+    <span class="hljs-comment">/* 复制 thread_info 数据结构及线程栈 */</span>
+    retval = copy_thread(<span class="hljs-number">0</span>, clone_flags, stack_start, stack_size, p, regs);
+
+    <span class="hljs-comment">/* 分配新的 pid */</span>
+    p-&gt;pid = pid_nr(pid);
+    <span class="hljs-comment">/* thread group id = new pid */</span>
+    p-&gt;tgid = p-&gt;pid;
+    <span class="hljs-comment">/* 如果标志是 CLONE_THREAD，tgid = 父任务id */</span>
+    <span class="hljs-keyword">if</span> (clone_flags &amp; CLONE_THREAD)
+    	p-&gt;tgid = current-&gt;tgid;
+
+    p-&gt;set_child_tid = (clone_flags &amp; CLONE_CHILD_SETTID) ? child_tidptr : <span class="hljs-literal">NULL</span>;
+    p-&gt;clear_child_tid = (clone_flags &amp; CLONE_CHILD_CLEARTID) ? child_tidptr: <span class="hljs-literal">NULL</span>;
+    <span class="hljs-comment">/*
+     * sigaltstack should be cleared when sharing the same VM
+     */</span>
+    <span class="hljs-keyword">if</span> ((clone_flags &amp; (CLONE_VM|CLONE_VFORK)) == CLONE_VM)
+    	p-&gt;sas_ss_sp = p-&gt;sas_ss_size = <span class="hljs-number">0</span>;
+
+    <span class="hljs-comment">/* ok, now we should be set up.. */</span>
+    p-&gt;exit_signal = (clone_flags &amp; CLONE_THREAD) ? <span class="hljs-number">-1</span> : (clone_flags &amp; CSIGNAL);
+    p-&gt;pdeath_signal = <span class="hljs-number">0</span>;
+    p-&gt;exit_state = <span class="hljs-number">0</span>;
+
+    <span class="hljs-comment">/*
+     * Ok, make it visible to the rest of the system.
+     * We dont wake it up yet.
+     */</span>
+    p-&gt;group_leader = p;
+    INIT_LIST_HEAD(&amp;p-&gt;thread_group);
+    INIT_LIST_HEAD(&amp;p-&gt;ptrace_children);
+    INIT_LIST_HEAD(&amp;p-&gt;ptrace_list);
+
+    p-&gt;cpus_allowed = current-&gt;cpus_allowed;
+    <span class="hljs-keyword">if</span> (unlikely(!cpu_isset(task_cpu(p), p-&gt;cpus_allowed) ||
+    		!cpu_online(task_cpu(p))))
+    	set_task_cpu(p, smp_processor_id());
+
+    <span class="hljs-comment">/* CLONE_PARENT re-uses the old parent */</span>
+    <span class="hljs-keyword">if</span> (clone_flags &amp; (CLONE_PARENT|CLONE_THREAD))
+    	p-&gt;real_parent = current-&gt;real_parent;
+    <span class="hljs-keyword">else</span>
+    	p-&gt;real_parent = current;
+    p-&gt;parent = p-&gt;real_parent;
+
+    spin_lock(&amp;current-&gt;sighand-&gt;siglock);
+
+    <span class="hljs-keyword">if</span> (clone_flags &amp; CLONE_THREAD) {
+    	p-&gt;group_leader = current-&gt;group_leader;
+    	list_add_tail_rcu(&amp;p-&gt;thread_group, &amp;p-&gt;group_leader-&gt;thread_group);
+
+    	<span class="hljs-keyword">if</span> (!cputime_eq(current-&gt;signal-&gt;it_virt_expires,
+    			cputime_zero) ||
+    	    !cputime_eq(current-&gt;signal-&gt;it_prof_expires,
+    			cputime_zero) ||
+    	    current-&gt;signal-&gt;rlim[RLIMIT_CPU].rlim_cur != RLIM_INFINITY ||
+    	    !list_empty(&amp;current-&gt;signal-&gt;cpu_timers[<span class="hljs-number">0</span>]) ||
+    	    !list_empty(&amp;current-&gt;signal-&gt;cpu_timers[<span class="hljs-number">1</span>]) ||
+    	    !list_empty(&amp;current-&gt;signal-&gt;cpu_timers[<span class="hljs-number">2</span>])) {
+    		<span class="hljs-comment">/*
+    		 * Have child wake up on its first tick to check
+    		 * for process CPU timers.
+    		 */</span>
+    		p-&gt;it_prof_expires = jiffies_to_cputime(<span class="hljs-number">1</span>);
+    	}
+    }
+
+    <span class="hljs-keyword">if</span> (likely(p-&gt;pid)) {
+    	add_parent(p);
+    	<span class="hljs-keyword">if</span> (unlikely(p-&gt;ptrace &amp; PT_PTRACED))
+    		__ptrace_link(p, current-&gt;parent);
+
+    	<span class="hljs-keyword">if</span> (thread_group_leader(p)) {
+    		<span class="hljs-keyword">if</span> (clone_flags &amp; CLONE_NEWPID)
+    			p-&gt;nsproxy-&gt;pid_ns-&gt;child_reaper = p;
+
+    		p-&gt;signal-&gt;tty = current-&gt;signal-&gt;tty;
+    		set_task_pgrp(p, task_pgrp_nr(current));
+    		set_task_session(p, task_session_nr(current));
+    		attach_pid(p, PIDTYPE_PGID, task_pgrp(current));
+    		attach_pid(p, PIDTYPE_SID, task_session(current));
+    		list_add_tail_rcu(&amp;p-&gt;tasks, &amp;init_task.tasks);
+    		__get_cpu_var(process_counts)++;
+    	}
+    	attach_pid(p, PIDTYPE_PID, pid);
+    	nr_threads++;
+    }
+
+    total_forks++;
+    spin_unlock(&amp;current-&gt;sighand-&gt;siglock);
+    write_unlock_irq(&amp;tasklist_lock);
+    proc_fork_connector(p);
+    cgroup_post_fork(p);
+    <span class="hljs-keyword">return</span> p;
+}</code></pre><p>根据入参配置的 <code>flags</code> ，<code>copy_process</code> 确定了新任务与父任务共享的状态，以及一些需要拷贝的状态。</p>
+<ul>
+<li><code>fork</code> 产生一个新的任务，与父任务不存在任何资源共享的情况。</li>
+<li><code>clone</code> 可高度定制化的系统调用，几乎可以自由组合定制新的任务</li>
+<li><code>vfork</code> 历史原因而存在的系统调用，设计目的在于一般 <code>fork</code> 之后都将调用 <code>execve</code> 来执行全新的任务，也就导致了 <code>fork</code> 所做的拷贝全部白费，因此搞了个轻量级的 <code>vfork</code> 来避免做内存的拷贝。</li>
+</ul>
+<blockquote>
+<p><strong>VFORK</strong>
+Historic description
+Under Linux, fork(2) is implemented using copy-on-write pages, so the only penalty incurred by fork(2) is the time and memory required to duplicate the  parent's page tables, and to create a unique task structure for the child.  However, in the bad old days a fork(2) would require making a complete copy of the caller's data space, often needlessly, since usually immediately afterward an exec(3) is done.  Thus, for greater efficiency, BSD introduced  the  vfork() system call, which did not fully copy the address space of the parent process, but borrowed the parent's memory and thread of control until a call to execve(2) or an exit occurred.  The parent process was suspended while the child was using its resources.   The  use  of vfork() was tricky: for example, not modifying data in the parent process depended on knowing which variables were held in a register.</p>
+</blockquote>
+<h2>pid, tgid</h2>
+<pre><code class="hljs"><span class="hljs-comment">/* 分配新的 pid */</span>
+p-&gt;pid = pid_nr(pid);
+<span class="hljs-comment">/* thread group id = new pid */</span>
+p-&gt;tgid = p-&gt;pid;
+<span class="hljs-comment">/* 如果标志是 CLONE_THREAD，tgid = 父任务id */</span>
+<span class="hljs-keyword">if</span> (clone_flags &amp; CLONE_THREAD)
+	p-&gt;tgid = current-&gt;tgid;</code></pre><p><code>pid</code> 作为每个 <code>task</code> 的唯一标识符存在。<code>tgid</code> 用于指代线程组id，从代码上看也就是进程主线程id。（请原谅我又用了进程/线程的表述）</p>
+<p>看着没有问题？当然不可能。这段代码可是意味着 <code>pid</code> 唯一啊，这可不符合日常表述啊。对于系统的终端用户来讲，一个进程可以有一个或多个线程。<code>pid</code> 可是一直被翻译成进程ID(process id)。难道？</p>
+<p>这就是本质实现与表面功夫的差别啦。<code>pid_t getpid(void);</code>, <code>pid_t gettid(void);</code> 两个系统调用分别被用来提供进程ID和线程ID（请仔细思考下代码实现和对外展示的差距）。</p>
+<pre><code class="hljs"><span class="hljs-comment">/**
+ * sys_getpid - return the thread group id of the current process
+ *
+ * Note, despite the name, this returns the tgid not the pid.  The tgid and
+ * the pid are identical unless CLONE_THREAD was specified on clone() in
+ * which case the tgid is the same in all threads of the same group.
+ *
+ * This is SMP safe as current-&gt;tgid does not change.
+ */</span>
+<span class="hljs-function">asmlinkage <span class="hljs-keyword">long</span> <span class="hljs-title">sys_getpid</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span>
+</span>{
+	<span class="hljs-keyword">return</span> task_tgid_vnr(current);
+}</code></pre><pre><code class="hljs"><span class="hljs-comment">/* Thread ID - the internal kernel "pid" */</span>
+<span class="hljs-function">asmlinkage <span class="hljs-keyword">long</span> <span class="hljs-title">sys_gettid</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span>
+</span>{
+	<span class="hljs-keyword">return</span> task_pid_vnr(current);
+}</code></pre><p>这样就好懂多了吧。用户态通过系统调用取到的 <code>pid</code>, <code>tid</code> 已经经过了一层加工，分别映射着内核实现的 <code>tgid</code>, <code>pid</code> 。</p>
+<p><em>额外地：想通过 <code>ps</code> 查看进程/线程可以使用 <code>ps -eLf</code></em></p>
+<h2>schedule</h2>
+<p>再来回顾下任务调度是如何实现的。与<a href="https://www.ffutop.com/2018-10-12-understand-Kernel-4/">第四篇 任务调度</a>描述的并无太大不同。要说最大的区分，就是早期版本与时下版本顺时的演进。当然，还有就是多核CPU下的SMP调度。</p>
+<p>至于多核下的所谓进程/线程如何调度。内核根本认识不到进程/线程的概念，唯一的只有任务(task, or COE)。而每个用户所认为的线程在内核的认识下也是一个任务。因此，所谓用户认识到的多线程并发执行在多核CPU下也就完全是可行的。</p>
+<h2>concept of Thread</h2>
+<p>且不论Linux内核没有线程概念的前提，线程的定义总是存在的，而满足其定义的实现，也就可以被称为“线程”。哪些要素组成了线程呢？</p>
+<ol>
+<li>线程是与其它代码共享进程地址空间的最小执行流</li>
+<li>诸如栈、寄存器信息、本地线程数据需要保持独立</li>
+<li>互斥锁(Mutex)、条件变量(Condition Variable)、线程间同步管理的支持</li>
+<li>...</li>
+</ol>
+<p>既然都说了Linux内核没有线程概念，现在却又开始提，这不是打脸嘛？OK，具体情况是：内核本身不支持线程，甚至没有线程概念。但其通过GLIBC的NPTL(Native POSIX Thread Library)支持了线程。</p>
+<blockquote>
+<p>在Linux内核2.6出现之前任务是(最小)可调度的对象，当时的Linux不真正支持线程。但是Linux内核有一个系统调用指令<code>clone()</code>，这个指令将产生一个调用方任务的拷贝，而且这个拷贝可以与原任务使用同一地址空间。LinuxThreads计划使用这个系统调用来提供一个内核级别的线程支持。但是这个解决方法与真正的POSIX标准有一些不兼容的地方，尤其是在信号处理、进程调度和进程间同步原语方面。
+<em>Copied From <a href="https://en.wikipedia.org/wiki/Native_POSIX_Thread_Library">Wikipedia NPTL</a></em></p>
+</blockquote>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79ly1g1x9mjuahnj31400u0doi.jpg" alt="Linux 架构"></p>
+<h2>Thread Model</h2>
+<p>最后，聊聊线程模型。相信各位不管懂或不懂，至少都听说过 1:1, N:1, M:N 线程模型。至于究竟这些模型是怎么回事呢？且看：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79ly1g1xhulou5bj30go08zglv.jpg" alt="Thread Model"></p>
+<h3>1:1 Model</h3>
+<p>最简单的线程模型，也是内核通过NPTL最容易实现的一种模型。每个通过 <code>clone</code> 产生的新任务（当然，至少要符合共享内存等线程定义）对应用程序来说就是一个新线程。所谓的用户级线程和内核级线程，在 1:1 模型中就是同一个任务，只是新任务在被内核 <code>clone</code> 之后，又由NPTL做了进一步的管理，因此在形式上看似有用户级/内核级之分。</p>
+<h3>N:1 Model</h3>
+<p>N:1 线程模型又称为“用户级线程模型”。在这种模型下，线程的概念由用户态代码进行支持，包括用来管理线程的用户空间调度器以及以非阻塞模式捕捉和处理I/O机制。使用N:1模型的好处在于其上下文切换的代价几乎为零，毕竟这是纯用户态的。当然，缺点也比较明显：由于对内核来说，认为这只是单个任务，也就无法充分利用多核CPU的特性。</p>
+<h3>M:N Model</h3>
+<p>有没有方式整合1:1模型和N:1模型，让内核意识到有几个任务，但又存在更多的线程在用户级执行呢？当然也是可行，但如何协调调度又是费事费力的实现了。</p>
+<h2>Threads vs Events</h2>
+<p>线程怎么又和事件扯上关系了呢？先来回顾下任务调度的几种模式：</p>
+<ol>
+<li>串行，每个任务依次执行，不存在任务调度</li>
+<li>抢占式，通过时钟中断决定是否切换任务</li>
+<li>协作式，只有当任务主动放弃对CPU的占用，才能轮到下一个任务。</li>
+</ol>
+<p>对于用户级线程来说，内核无法意识到这些线程的存在，硬件发起的所有中断又都被内核捕获。因此，想要实现抢占式是不可能完成的任务（至少以本人目前所知是不可能的）。故协作式线程调度是用户级线程的唯一选择。而协作式就意味着是由线程硬编码主动放弃任务执行（<code>yield</code> / <code>schedule</code> / etc.）。如此这般，与事件驱动下，不同代码片之间的调度又是何其相似。当然，只是开个玩笑，如果都一样了，直接用事件驱动不就OK了。线程之所以是线程，有其独特的定义在。不过不再细说，可以参考 <a href="http://courses.cs.vt.edu/cs5204/fall09-kafura/Presentations/Threads-VS-Events.pdf">Threads vs Events</a></p>
+<h2>参考</h2>
+<p>[1]. Mauerer W. Professional Linux kernel architecture[M]. John Wiley &amp; Sons, 2010.
+[2]. <a href="http://lkml.iu.edu/hypermail/linux/kernel/9608/0191.html">Linus Torvalds. Re: proc fs and shared pids</a>[EL/OL]. Aug 6th, 1996.
+[3]. <a href="https://randu.org/tutorials/threads/">Multithreaded Programming (POSIX pthreads Tutorial)</a>[EL/OL].
+[4]. <a href="https://blog.csdn.net/u012432778/article/details/47378321">线程模型</a>[EL/OL].
+[5]. <a href="https://www.evanjones.ca/software/threading.html">Implementing a Thread Library on Linux</a>[EL/OL]. Dec 10th, 2003.</p>
+<h2>用户级线程资料参考</h2>
+<p>[1]. <code>man makecontext</code> &amp; <code>man swapcontext</code>
+[2]. <a href="https://github.com/brianwatling/libfiber">Libfiber</a>
+[3]. <a href="https://github.com/dramesh/GTThreads"><strong>所谓的</strong>抢占式用户线程实现</a></p>
+<pre><code class="hljs">__                    __                  
+ / _| __ _ _ __   __ _ / _| ___ _ __   __ _ 
+| |_ / _` | '_ \ / _` | |_ / _ \ '_ \ / _` |
+|  _| (_| | | | | (_| |  _|  __/ | | | (_| |
+|_|  \__,_|_| |_|\__, |_|  \___|_| |_|\__, |
+                 |___/                |___/</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"fullUrl":"/2019-04-10-understand-Kernel-10"},"buildId":"xx4WXnl7odya2QE7dUtyW","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>

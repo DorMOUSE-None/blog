@@ -1,0 +1,189 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><h2>概述</h2>
+<p>之所以想要了解 Linux Kernel，与前一个月的 JVM ClassFile 的学习有这很大的关联。</p>
+<p>说实话，刨除 JVM 的具体实现，Sun (或者现在该说是 Oracle) 确实将 Java 的底层逻辑设计得相当简单。</p>
+<ol>
+<li>有限而统一的指令集(不超过 256 个，可以用 1 字节表示)</li>
+<li>操作数栈+局部变量表共同实现的指令运算</li>
+<li>高度封装的成员变量/方法的寻址方式</li>
+<li>... (见识短浅，想不到了...以后再补充吧)</li>
+</ol>
+<p>但是，与 JVM 模拟的虚拟机不同，实体机器有着更为复杂的结构。
+最根本的，不同厂商的机器就带来了不同的 CPU 指令集，这就已经让人难以接受了。</p>
+<p>其实最初，是想要继续去看看 Hotspot 虚拟机的。但是，混杂的代码(C++, Java, 平台相关各种实现) 带来了很大的阅读障碍。
+最根本的，我甚至找不到一个学习的基本立足点，出发点(当然，也可能我根本就没仔细去看，哈哈)。</p>
+<p>借着一次机会，我开始看《程序员的自我修养——链接、装载与库》一书。确实无论是 ELF 格式，静态链接与动态链接甚至 Linux 的内建函数
+都给了我比较深刻的印象，向我展示了 C 更深入的一面。但是，macOS 给我带来了比较大的客观阻碍(即使用 Docker 容器得到了一个可用的 Linux 环境，但是否与直接建立在机器上的系统有所区别，此处还得打个问号)。
+同时，书中的部分内容上下不统一，缺少前后文也是一个重大的问题。总之，这并不完全适合我这种初学者逐一进行书中所描述的全部实验。</p>
+<p>最后，我决定展开对 Linux Kernel 的学习，试图通过对直接构架在硬件上的操作系统进行一番比较深入的学习。</p>
+<p>期间，找过一些资料，也了解到 Linus Torvals 直接领导着的 <a href="https://www.kernel.org/">Kernel 项目的官网</a>；甚至，找到了各个版本的 kernel 源码(虽然确实地丢失了最早期 0.XX 的若干版本)。
+不得不说，就目前来讲，我觉得《Linux内核完全注释》是最适合(<em>打个问号，至少暂时是的</em>)我学习的一书。</p>
+<p>之后的若干博文，将都以《Linux内核完全注释》中的内容为基础，结合目前的实际需要，从而进行实操性的认知与学习。</p>
+<p>&lt;!-- more --&gt;</p>
+<h2>软硬件描述</h2>
+<p>进行这方面的描述，是因为 Linux Kernel 将直接与底层硬件打交道(当然，这方面使用的 Bochs 仿真器)。
+但是，准备诸如 .img (磁盘映像文件), 机器指令文件等都不得不借助于现有的平台。</p>
+<ul>
+<li>操作系统: macOS 10.13.6 , Ubuntu 16.04 (Docker 虚拟机容器)</li>
+<li>仿真器  : Bochs 2.6.9_2 (macOS 与 Ubuntu 上相同)</li>
+<li>更多    : 将直接在正文首次使用到时进行说明</li>
+</ul>
+<h2>Bochs</h2>
+<p><a href="http://bochs.sourceforge.net/">Bochs 官网</a></p>
+<p><a href="https://sourceforge.net/projects/bochs/files/">Bochs 下载链</a></p>
+<p>说实话这一周都差不多要被 Bochs 折腾死，用源码进行编译出现各种各样的问题。(我猜新版本根本就没考虑对 macOS 做兼容)</p>
+<p>最后，不得不使用经编译后的二进制分发版。 <code>brew install bochs</code> 当然了，反正也能用，就不纠结非得自己编译了。(如果哪位能成功编译个 macOS 可用的应用，希望能把踩得坑整理整理，供后来者参考)</p>
+<h3>目录结构</h3>
+<pre><code class="hljs">.
+├── CHANGES
+├── COPYING
+├── INSTALL_RECEIPT.json
+├── LICENSE
+├── README
+├── TODO
+├── bin
+│   ├── bochs                           // bochs 可执行文件
+│   └── bximage                         // 制作磁盘映像文件的工具
+├── lib                                 // 动态库目录
+│   └── bochs
+│       └── plugins
+│           ├── libbx_acpi.0.0.0.so
+│           ├── ... 略
+│           └── libbx_vga.so -&gt; libbx_vga.0.0.0.so
+└── share                               // 与体系结构无关的文件放在此目录下
+    ├── bochs
+    │   ├── BIOS-bochs-latest
+    │   ├── BIOS-bochs-legacy
+    │   ├── SeaBIOS-README
+    │   ├── VGABIOS-elpin-2.40
+    │   ├── VGABIOS-elpin-LICENSE
+    │   ├── VGABIOS-lgpl-README
+    │   ├── VGABIOS-lgpl-latest
+    │   ├── VGABIOS-lgpl-latest-cirrus
+    │   ├── VGABIOS-lgpl-latest-cirrus-debug
+    │   ├── VGABIOS-lgpl-latest-debug
+    │   ├── bios.bin-1.7.5
+    │   └── keymaps
+    │       ├── sdl-pc-us.map
+    │       ├── ... 略
+    │       └── x11-pc-us.map
+    ├── doc
+    │   └── bochs
+    │       ├── CHANGES
+    │       ├── COPYING
+    │       ├── LICENSE
+    │       ├── README
+    │       ├── TODO
+    │       ├── bochsrc-sample.txt      // bochsrc 配置文件的示例样板
+    │       └── slirp.conf
+    └── man
+        ├── man1
+        │   ├── bochs-dlx.1.gz
+        │   ├── bochs.1.gz
+        │   └── bximage.1.gz
+        └── man5
+            └── bochsrc.5.gz</code></pre><h3>简单使用</h3>
+<p>Bochs 下载链提供了 Bochs 不同版本的源码的下载，同时也提供了一些可用的磁盘映像文件(都是一些已经经过处理，可用使用进行仿真运行的 OS )</p>
+<p>说实话，这是绝对有必要进行的一步，不仅仅是了解配置文件 bochsrc 的配置方式，更可用借此了解一下仿真器的使用方式。(在启动系统上，我也被坑了一天，后面细说)</p>
+<p>首先，这里演示的将是 DLX Linux 。</p>
+<ol>
+<li>
+<p>下载，解压，进入目录。</p>
+</li>
+<li>
+<p>目录下文件如下</p>
+</li>
+</ol>
+<pre><code class="hljs">.
+├── bochsrc.txt         // bochs 启动时将默认通过这个文件读取仿真器配置
+├── hd10meg.img         // 磁盘映像文件
+├── readme.txt
+└── testform.txt</code></pre><ol start="3">
+<li>启动仿真器</li>
+</ol>
+<p>在 DLX Linux 目录下键入命令 <code>bochs</code>, 观察到命令行输出:</p>
+<pre><code class="hljs">========================================================================
+                       Bochs x86 Emulator 2.6.9
+               Built from SVN snapshot on April 9, 2017
+                  Compiled on May  2 2018 at 13:26:32
+========================================================================
+00000000000i[      ] LTDL_LIBRARY_PATH not set. using compile time default '/usr/local/Cellar/bochs/2.6.9_2/lib/bochs/plugins'
+00000000000i[      ] BXSHARE not set. using compile time default '/usr/local/Cellar/bochs/2.6.9_2/share/bochs'
+00000000000i[      ] lt_dlhandle is 0x7fef2252a500
+00000000000i[PLUGIN] loaded plugin libbx_usb_common.so
+00000000000i[      ] lt_dlhandle is 0x7fef2252a8a0
+00000000000i[PLUGIN] loaded plugin libbx_unmapped.so
+00000000000i[      ] lt_dlhandle is 0x7fef2252ad00
+00000000000i[PLUGIN] loaded plugin libbx_biosdev.so
+00000000000i[      ] lt_dlhandle is 0x7fef2252b1e0
+00000000000i[PLUGIN] loaded plugin libbx_speaker.so
+00000000000i[      ] lt_dlhandle is 0x7fef2252ba50
+00000000000i[PLUGIN] loaded plugin libbx_extfpuirq.so
+00000000000i[      ] lt_dlhandle is 0x7fef2252be70
+00000000000i[PLUGIN] loaded plugin libbx_parallel.so
+00000000000i[      ] lt_dlhandle is 0x7fef238013c0
+00000000000i[PLUGIN] loaded plugin libbx_serial.so
+00000000000i[      ] lt_dlhandle is 0x7fef22706cd0
+00000000000i[PLUGIN] loaded plugin libbx_iodebug.so
+00000000000i[      ] reading configuration from bochsrc.txt
+------------------------------
+Bochs Configuration: Main Menu
+------------------------------
+
+This is the Bochs Configuration Interface, where you can describe the
+machine that you want to simulate.  Bochs has already searched for a
+configuration file (typically called bochsrc.txt) and loaded it if it
+could be found.  When you are satisfied with the configuration, go
+ahead and start the simulation.
+
+You can also start bochs with the -q option to skip these menus.
+
+1. Restore factory default configuration
+2. Read options from...
+3. Edit options
+4. Save options to...
+5. Restore the Bochs state from...
+6. Begin simulation
+7. Quit now
+
+Please choose one: [6]</code></pre><p>bochs 默认读取当前目录下 <code>bochsrc.txt</code> 文件，因此不需要其他配置。</p>
+<p>选择 6 或者直接 <em>回车</em></p>
+<pre><code class="hljs">00000000000i[      ] lt_dlhandle is 0x7fef22707270
+00000000000i[PLUGIN] loaded plugin libbx_sdl2.so
+00000000000i[      ] installing sdl2 module as the Bochs GUI
+00000000000i[SDL2  ] maximum host resolution: x=2880 y=1800
+00000000000i[      ] using log file bochsout.txt
+Next at t=0
+(0) [0x0000fffffff0] f000:fff0 (unk. ctxt): jmpf 0xf000:e05b          ; ea5be000f0
+&lt;bochs:1&gt;</code></pre><p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fuevtktuh0j30zc0tcwfd.jpg" alt=""></p>
+<p>终端出现更多输出，同时 Bochs 开启了一个可视化终端(当然，现在还没有任何内容)。</p>
+<p>在这儿被坑了好久。本来以为 Bochs 会直接执行 BIOS 指令，启动操作系统，但是自始至终，停在这里就没动过...</p>
+<p>这边是由于 Bochs 本身是支持调试的(T_T，见鬼)，就像是 GDB 和 LLDB 一样，进入调试后，需要指令 <code>c</code> (continue) 来继续执行(当然，还有其它调试命令)</p>
+<ol start="4">
+<li>键入 <code>c</code></li>
+</ol>
+<pre><code class="hljs">&lt;bochs:1&gt; c</code></pre><p>仿真器开始引导程序的加载</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fuew9zoocuj313c0pstaw.jpg" alt=""></p>
+<p>OS Kernel 启动，等待用户登录 (默认的用户是 root , 没有密码)。
+之后就和普通的 Linux 机器类似，不过支持的命令比较少。毕竟是一个精简后的系统。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fuewamqzm6j313q0pqjtw.jpg" alt=""></p>
+<ol start="5">
+<li>关机</li>
+</ol>
+<p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fuewi9wjawj313q0q2gnc.jpg" alt=""></p>
+<p>仿真器仿真了许多实体机案件，右上角最后一个就是关机键</p>
+<h2>Docker 容器中运行 Ubuntu</h2>
+<p>这部分不详述，作为一个热门的技术，这方面的资料很多。Ubuntu 系统只是为了来执行一些 macOS 上没有的命令的(比如 <code>as86</code>, <code>ld86</code>)</p>
+<p>简述两个 docker 容器和宿主机间复制文件的命令</p>
+<p>在宿主机下执行命令:</p>
+<pre><code class="hljs">docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH|-
+docker cp [OPTIONS] SRC_PATH|- CONTAINER:DEST_PATH [flags]</code></pre><p>例如:</p>
+<pre><code class="hljs">docker cp linux:/root/hello.c ./hello.c         <span class="hljs-comment"># 这里 linux 是 docker 容器名</span>
+docker cp 92dfc8ad70e1:/root/hello.c ./hello.c  <span class="hljs-comment"># 这里 92dfc8ad70e1 是 docker 容器 ID</span></code></pre><h2>参考</h2>
+<p>[1]. 俞甲子. 程序员的自我修养[M]. 电子工业出版社, 2009.
+[2]. 赵炯. Linux内核完全注释 内核版本0.11 V3.0[EB/OL]. http://www.oldlinux.org/, 2007</p>
+<pre><code class="hljs">__                    __                  
+ / _| __ _ _ __   __ _ / _| ___ _ __   __ _ 
+| |_ / _` | '_ \ / _` | |_ / _ \ '_ \ / _` |
+|  _| (_| | | | | (_| |  _|  __/ | | | (_| |
+|_|  \__,_|_| |_|\__, |_|  \___|_| |_|\__, |
+                 |___/                |___/</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"fullUrl":"/2018-08-19-understand-Kernel-0"},"buildId":"xx4WXnl7odya2QE7dUtyW","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><blockquote>
+<p>本文描述的 ASM 指的是 OW2 ASM</p>
+</blockquote>
+<h2>ASM-Core 的结构</h2>
+<p><em>首先是一些概述性的内容。</em></p>
+<p>由于 ASM 操作的 JAVA 字节码有严格的格式规定，且即使随着 JVM 标准的升级也极少出现重大调整。
+因此适用面狭窄的访问者模式在该项目中被大量地使用，并且已经到了丧心病狂的程度:)</p>
+<p>从核心包声明的类来看，主要包括:</p>
+<ol>
+<li>
+<p>ClassReader - 作为结构化对象，将接收(accept)访问者的访问</p>
+</li>
+<li>
+<p>几种访问者抽象类以及相应的实现类</p>
+</li>
+</ol>
+<ul>
+<li>AnnotationVisitor -&gt; AnnotationWriter</li>
+<li>ClassVisitor -&gt; ClassWriter</li>
+<li>FieldVisitor -&gt; FieldWriter</li>
+<li>MethodVisitor -&gt; MethodWriter</li>
+<li>ModuleVisitor -&gt; ModuleWriter</li>
+</ul>
+<ol start="3">
+<li>
+<p>Opcodes &amp; Constants - ClassFile 中描述的大量常量符号与值</p>
+</li>
+<li>
+<p>其它一些辅助的类</p>
+</li>
+</ol>
+<ul>
+<li>Attribute - 用于处理非标准化的属性(ClassFile 允许<a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html">JVMS</a> 中未定义的 Attribute)</li>
+<li>ByteArray - 动态可自适应的 byte[] (字节数组)</li>
+<li>Context - ClassReader 在被解析(被访问)过程中用于表示“累积状态”的一个类/对象</li>
+<li>Symbol - 用于表示 ClassFile 中描述的 Constant 的基类</li>
+<li>SymbolTable - 用于存储常量池对象</li>
+<li>其它内容省略</li>
+</ul>
+<p>&lt;!-- more --&gt;</p>
+<h2>ClassFile 文件格式</h2>
+<p>本节的内容可以参阅 <a href="https://dormouse-none.github.io/2018-06-11-ASM-ClassReader/">ClassFile 文件格式</a></p>
+<p>ClassFile 是 ASM 操作字节码的基础与前提。在 JVMS 定义了 .class 文件格式之后，ASM 才在此基础上进行了对 ClassFile 的字节码操作。</p>
+<p>因此，无论如何，个人认为在真正开始了解 ASM 之前，通读一遍 ClassFile 文件格式是完全有必要的。并且，在基本了解 ClassFile 内容的基础上，
+尝试对某个 .class 文件进行手工解析也不失为一种加深理解的途径。</p>
+<h2>Visitor Pattern</h2>
+<p>由于 ASM 的实现采用了偏门的访问者模式。因此，了解访问者模式也是一个必不可少的重要环节。同时在了解后也将为源码阅读者提供更清晰的解读思路。</p>
+<p>《设计模式：可复用面向对象软件的基础》一书的“5.11 VISITOR(访问者)——对象行为型模式”提供了很详尽的解释。</p>
+<p>本人对这方面的不甚了解，推荐自行查找资料。</p>
+<h2>ClassReader</h2>
+<p>ClassReader 是解析现有的 .class 文件的基本工具。同时，ClassReader 也作为一个内容的持有者，与 SymboleTable 配合，来满足访问者基本的访问需求。</p>
+<p>刨除大量的内部私有方法，ClassReader 对外开放的接口相当简单。最核心的方法仅包括 ClassReader(...) 以及 accetp(...)</p>
+<h3>ClassReader(...) 构造方法</h3>
+<p>顾名思义，构造方法用于实例化 ClassReader 对象，包括一些必须的变量的初始化。</p>
+<p>在构造函数中完成的初始化内容包括:</p>
+<ul>
+<li>校验版本号</li>
+<li>存储每个常量池项目的起始偏移量 cpInfoOffsets</li>
+<li>存储每个引导方法的起始偏移量 bootstrapMethodOffsets</li>
+<li>存储最长字符串常量的大小 maxStringLength</li>
+</ul>
+<pre><code class="hljs">ClassReader(<span class="hljs-keyword">final</span> <span class="hljs-keyword">byte</span>[] classFileBuffer, <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> classFileOffset, <span class="hljs-keyword">final</span> <span class="hljs-keyword">boolean</span> checkClassVersion) {
+    <span class="hljs-keyword">this</span>.b = classFileBuffer;   <span class="hljs-comment">// .class 文件缓存</span>
+    <span class="hljs-comment">// 检查主版本号, 第6,7个字节(从0字节开始计数)</span>
+    <span class="hljs-keyword">if</span> (checkClassVersion &amp;&amp; readShort(classFileOffset + <span class="hljs-number">6</span>) &gt; Opcodes.V11) {
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalArgumentException(
+          <span class="hljs-string">"Unsupported class file major version "</span> + readShort(classFileOffset + <span class="hljs-number">6</span>));
+    }
+    <span class="hljs-comment">// 创建常量池数组，常量池长度的定义 constant_pool_count 在第8,9字节</span>
+    <span class="hljs-keyword">int</span> constantPoolCount = readUnsignedShort(classFileOffset + <span class="hljs-number">8</span>);     <span class="hljs-comment">// 读取无符号short, 即读取连续两字节作为一个short值</span>
+    cpInfoOffsets = <span class="hljs-keyword">new</span> <span class="hljs-keyword">int</span>[constantPoolCount];                         <span class="hljs-comment">// 每个常量的偏移位置</span>
+    cpInfoValues = <span class="hljs-keyword">new</span> Object[constantPoolCount];                       <span class="hljs-comment">// 每个常量的实例对象</span>
+    <span class="hljs-keyword">int</span> currentCpInfoIndex = <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">int</span> currentCpInfoOffset = classFileOffset + <span class="hljs-number">10</span>;
+    <span class="hljs-keyword">int</span> currentMaxStringLength = <span class="hljs-number">0</span>;                                     <span class="hljs-comment">// 最长字符串常量</span>
+    <span class="hljs-keyword">while</span> (currentCpInfoIndex &lt; constantPoolCount) {
+      cpInfoOffsets[currentCpInfoIndex++] = currentCpInfoOffset + <span class="hljs-number">1</span>;
+      <span class="hljs-keyword">int</span> cpInfoSize;
+      <span class="hljs-keyword">switch</span> (classFileBuffer[currentCpInfoOffset]) {
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_FIELDREF_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_METHODREF_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_INTERFACE_METHODREF_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_INTEGER_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_FLOAT_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_NAME_AND_TYPE_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_INVOKE_DYNAMIC_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_DYNAMIC_TAG:
+          cpInfoSize = <span class="hljs-number">5</span>;
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_LONG_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_DOUBLE_TAG:
+          cpInfoSize = <span class="hljs-number">9</span>;
+          currentCpInfoIndex++;
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_UTF8_TAG:
+          cpInfoSize = <span class="hljs-number">3</span> + readUnsignedShort(currentCpInfoOffset + <span class="hljs-number">1</span>);
+          <span class="hljs-keyword">if</span> (cpInfoSize &gt; currentMaxStringLength) {
+            <span class="hljs-comment">// The size in bytes of this CONSTANT_Utf8 structure provides a conservative estimate</span>
+            <span class="hljs-comment">// of the length in characters of the corresponding string, and is much cheaper to</span>
+            <span class="hljs-comment">// compute than this exact length.</span>
+            currentMaxStringLength = cpInfoSize;
+          }
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_METHOD_HANDLE_TAG:
+          cpInfoSize = <span class="hljs-number">4</span>;
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_CLASS_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_STRING_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_METHOD_TYPE_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_PACKAGE_TAG:
+        <span class="hljs-keyword">case</span> Symbol.CONSTANT_MODULE_TAG:
+          cpInfoSize = <span class="hljs-number">3</span>;
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">default</span>:
+          <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalArgumentException();
+      }
+      currentCpInfoOffset += cpInfoSize;
+    }
+    <span class="hljs-keyword">this</span>.maxStringLength = currentMaxStringLength;
+    <span class="hljs-comment">// The Classfile's access_flags field is just after the last constant pool entry.</span>
+    <span class="hljs-keyword">this</span>.header = currentCpInfoOffset;
+
+    <span class="hljs-comment">// 读取 BootstrapMethods 属性(如果存在)</span>
+    <span class="hljs-keyword">int</span> currentAttributeOffset = getFirstAttributeOffset();
+    <span class="hljs-keyword">int</span>[] currentBootstrapMethodOffsets = <span class="hljs-keyword">null</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = readUnsignedShort(currentAttributeOffset - <span class="hljs-number">2</span>); i &gt; <span class="hljs-number">0</span>; --i) {
+      <span class="hljs-comment">// 读取每个 attribute_info 的属性名和属性长度</span>
+      String attributeName = readUTF8(currentAttributeOffset, <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>[maxStringLength]);
+      <span class="hljs-keyword">int</span> attributeLength = readInt(currentAttributeOffset + <span class="hljs-number">2</span>);
+      currentAttributeOffset += <span class="hljs-number">6</span>;
+      <span class="hljs-comment">// 如果当前属性名为 BootstrapMethods ，则进入处理逻辑</span>
+      <span class="hljs-keyword">if</span> (Constants.BOOTSTRAP_METHODS.equals(attributeName)) {
+        <span class="hljs-comment">// Read the num_bootstrap_methods field and create an array of this size.</span>
+        currentBootstrapMethodOffsets = <span class="hljs-keyword">new</span> <span class="hljs-keyword">int</span>[readUnsignedShort(currentAttributeOffset)];
+        <span class="hljs-comment">// Compute and store the offset of each 'bootstrap_methods' array field entry.</span>
+        <span class="hljs-keyword">int</span> currentBootstrapMethodOffset = currentAttributeOffset + <span class="hljs-number">2</span>;
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> j = <span class="hljs-number">0</span>; j &lt; currentBootstrapMethodOffsets.length; ++j) {
+          currentBootstrapMethodOffsets[j] = currentBootstrapMethodOffset;
+          <span class="hljs-comment">// Skip the bootstrap_method_ref and num_bootstrap_arguments fields (2 bytes each),</span>
+          <span class="hljs-comment">// as well as the bootstrap_arguments array field (of size num_bootstrap_arguments * 2).</span>
+          currentBootstrapMethodOffset +=
+              <span class="hljs-number">4</span> + readUnsignedShort(currentBootstrapMethodOffset + <span class="hljs-number">2</span>) * <span class="hljs-number">2</span>;
+        }
+      }
+      currentAttributeOffset += attributeLength;
+    }
+    <span class="hljs-keyword">this</span>.bootstrapMethodOffsets = currentBootstrapMethodOffsets;
+  }</code></pre><p>到此为止，ClassReader 已经解析了包括 magic, minor version, major version, constant pool 。
+但是，诸如 field_info, method_info, attribute_info 等仍然没有得到处理。</p>
+<h3>accept(...)</h3>
+<p>访问者模式的核心操作就是结构化对象接受(accept)访问者对象实例的访问，并将结构化内容完全暴露给访问者。</p>
+<p>从抽象的方法角度看，可以理解成:</p>
+<pre><code class="hljs"><span class="hljs-comment">// --- 结构化对象的 accept() 方法 ---</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Visitor visitor)</span> </span>{
+    visitor.visit(<span class="hljs-keyword">this</span>);
+  }
+
+  <span class="hljs-comment">// --- 访问者对象的 visit() 方法 ---</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> Xxx <span class="hljs-title">visit</span><span class="hljs-params">(Element element)</span> </span>{
+    <span class="hljs-comment">// 若干关于 element 的读操作 + 其它操作</span>
+  }</code></pre><pre><code class="hljs"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(
+      <span class="hljs-keyword">final</span> ClassVisitor classVisitor,
+      <span class="hljs-keyword">final</span> Attribute[] attributePrototypes,
+      <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> parsingOptions)</span> </span>{
+    <span class="hljs-comment">// 定义 Context 作为辅助类，暂存被访问过程的“累积状态”</span>
+    Context context = <span class="hljs-keyword">new</span> Context();
+    context.attributePrototypes = attributePrototypes;
+    <span class="hljs-comment">/**
+     * 解析选项: 
+     * 1. SKIP_CODE - 不解析 CODE 属性 
+     * 2. SKIP_DEBUG - 不解析 DEBUG 相关的属性(例如SourceFile, SourceDebugExtension, LocalVariableTable, LocalVariableTypeTable, LineNumberTable)
+     * 4. SKIP_FRAMES - 跳过对 StackMap 和 StackMapTable 属性的解析
+     * ...
+     */</span>
+    context.parsingOptions = parsingOptions;
+    <span class="hljs-comment">// 从常量池读取常量所使用的缓冲数字</span>
+    context.charBuffer = <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>[maxStringLength];
+
+    <span class="hljs-comment">// Read the access_flags, this_class, super_class, interface_count and interfaces fields.</span>
+    <span class="hljs-comment">// 解析访问控制, 当前类, 父类, 接口数量与接口值等</span>
+    <span class="hljs-keyword">char</span>[] charBuffer = context.charBuffer;
+    <span class="hljs-keyword">int</span> currentOffset = header;
+    <span class="hljs-keyword">int</span> accessFlags = readUnsignedShort(currentOffset);
+    String thisClass = readClass(currentOffset + <span class="hljs-number">2</span>, charBuffer);
+    String superClass = readClass(currentOffset + <span class="hljs-number">4</span>, charBuffer);
+    String[] interfaces = <span class="hljs-keyword">new</span> String[readUnsignedShort(currentOffset + <span class="hljs-number">6</span>)];
+    currentOffset += <span class="hljs-number">8</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; interfaces.length; ++i) {
+      interfaces[i] = readClass(currentOffset, charBuffer);
+      currentOffset += <span class="hljs-number">2</span>;
+    }
+
+    <span class="hljs-comment">// Read the class attributes (the variables are ordered as in Section 4.7 of the JVMS).</span>
+    <span class="hljs-comment">// Attribute offsets exclude the attribute_name_index and attribute_length fields.</span>
+    <span class="hljs-comment">// - The offset of the InnerClasses attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> innerClassesOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The offset of the EnclosingMethod attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> enclosingMethodOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The string corresponding to the Signature attribute, or null.</span>
+    String signature = <span class="hljs-keyword">null</span>;
+    <span class="hljs-comment">// - The string corresponding to the SourceFile attribute, or null.</span>
+    String sourceFile = <span class="hljs-keyword">null</span>;
+    <span class="hljs-comment">// - The string corresponding to the SourceDebugExtension attribute, or null.</span>
+    String sourceDebugExtension = <span class="hljs-keyword">null</span>;
+    <span class="hljs-comment">// - The offset of the RuntimeVisibleAnnotations attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> runtimeVisibleAnnotationsOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The offset of the RuntimeInvisibleAnnotations attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> runtimeInvisibleAnnotationsOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The offset of the RuntimeVisibleTypeAnnotations attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> runtimeVisibleTypeAnnotationsOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The offset of the RuntimeInvisibleTypeAnnotations attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> runtimeInvisibleTypeAnnotationsOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The offset of the Module attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> moduleOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The offset of the ModulePackages attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> modulePackagesOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The string corresponding to the ModuleMainClass attribute, or null.</span>
+    String moduleMainClass = <span class="hljs-keyword">null</span>;
+    <span class="hljs-comment">// - The string corresponding to the NestHost attribute, or null.</span>
+    String nestHostClass = <span class="hljs-keyword">null</span>;
+    <span class="hljs-comment">// - The offset of the NestMembers attribute, or 0.</span>
+    <span class="hljs-keyword">int</span> nestMembersOffset = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// - The non standard attributes (linked with their {@link Attribute#nextAttribute} field).</span>
+    <span class="hljs-comment">//   This list in the &lt;i&gt;reverse order&lt;/i&gt; or their order in the ClassFile structure.</span>
+    Attribute attributes = <span class="hljs-keyword">null</span>;
+
+    <span class="hljs-comment">// 解析 Class 持有的属性</span>
+    <span class="hljs-keyword">int</span> currentAttributeOffset = getFirstAttributeOffset();
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = readUnsignedShort(currentAttributeOffset - <span class="hljs-number">2</span>); i &gt; <span class="hljs-number">0</span>; --i) {
+      <span class="hljs-comment">// Read the attribute_info's attribute_name and attribute_length fields.</span>
+      String attributeName = readUTF8(currentAttributeOffset, charBuffer);
+      <span class="hljs-keyword">int</span> attributeLength = readInt(currentAttributeOffset + <span class="hljs-number">2</span>);
+      currentAttributeOffset += <span class="hljs-number">6</span>;
+      <span class="hljs-comment">// The tests are sorted in decreasing frequency order (based on frequencies observed on</span>
+      <span class="hljs-comment">// typical classes).</span>
+      <span class="hljs-keyword">if</span> (Constants.SOURCE_FILE.equals(attributeName)) {
+        sourceFile = readUTF8(currentAttributeOffset, charBuffer);
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.INNER_CLASSES.equals(attributeName)) {
+        innerClassesOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.ENCLOSING_METHOD.equals(attributeName)) {
+        enclosingMethodOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.NEST_HOST.equals(attributeName)) {
+        nestHostClass = readClass(currentAttributeOffset, charBuffer);
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.NEST_MEMBERS.equals(attributeName)) {
+        nestMembersOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.SIGNATURE.equals(attributeName)) {
+        signature = readUTF8(currentAttributeOffset, charBuffer);
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.RUNTIME_VISIBLE_ANNOTATIONS.equals(attributeName)) {
+        runtimeVisibleAnnotationsOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
+        runtimeVisibleTypeAnnotationsOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.DEPRECATED.equals(attributeName)) {
+        accessFlags |= Opcodes.ACC_DEPRECATED;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.SYNTHETIC.equals(attributeName)) {
+        accessFlags |= Opcodes.ACC_SYNTHETIC;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.SOURCE_DEBUG_EXTENSION.equals(attributeName)) {
+        sourceDebugExtension =
+            readUTF(currentAttributeOffset, attributeLength, <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>[attributeLength]);
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.RUNTIME_INVISIBLE_ANNOTATIONS.equals(attributeName)) {
+        runtimeInvisibleAnnotationsOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attributeName)) {
+        runtimeInvisibleTypeAnnotationsOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.MODULE.equals(attributeName)) {
+        moduleOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.MODULE_MAIN_CLASS.equals(attributeName)) {
+        moduleMainClass = readClass(currentAttributeOffset, charBuffer);
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.MODULE_PACKAGES.equals(attributeName)) {
+        modulePackagesOffset = currentAttributeOffset;
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Constants.BOOTSTRAP_METHODS.equals(attributeName)) {
+        <span class="hljs-comment">// This attribute is read in the constructor.</span>
+      } <span class="hljs-keyword">else</span> {
+        Attribute attribute =
+            readAttribute(
+                attributePrototypes,
+                attributeName,
+                currentAttributeOffset,
+                attributeLength,
+                charBuffer,
+                -<span class="hljs-number">1</span>,
+                <span class="hljs-keyword">null</span>);
+        attribute.nextAttribute = attributes;
+        attributes = attribute;
+      }
+      currentAttributeOffset += attributeLength;
+    }
+
+    <span class="hljs-comment">// 第一个 .visit() 。让 ClassVisitor 的实现类处理当前类的版本号, 访问控制标志, 当前类, 结构, 父类, 接口</span>
+    <span class="hljs-comment">// 具体 visit() 由实现类随意定制。例如，针对于那些有打印功能的访问者实现类，直接打印也不失为一种有效的访问操作</span>
+    <span class="hljs-comment">// Visit the class declaration. The minor_version and major_version fields start 6 bytes before</span>
+    <span class="hljs-comment">// the first constant pool entry, which itself starts at cpInfoOffsets[1] - 1 (by definition).</span>
+    classVisitor.visit(
+        readInt(cpInfoOffsets[<span class="hljs-number">1</span>] - <span class="hljs-number">7</span>), accessFlags, thisClass, signature, superClass, interfaces);
+
+    <span class="hljs-comment">// 访问 SourceFile 和 SourceDebugExtenstion 属性</span>
+    <span class="hljs-comment">// Visit the SourceFile and SourceDebugExtenstion attributes.</span>
+    <span class="hljs-keyword">if</span> ((parsingOptions &amp; SKIP_DEBUG) == <span class="hljs-number">0</span>
+        &amp;&amp; (sourceFile != <span class="hljs-keyword">null</span> || sourceDebugExtension != <span class="hljs-keyword">null</span>)) {
+      classVisitor.visitSource(sourceFile, sourceDebugExtension);
+    }
+
+    <span class="hljs-comment">// Visit the Module, ModulePackages and ModuleMainClass attributes.</span>
+    <span class="hljs-keyword">if</span> (moduleOffset != <span class="hljs-number">0</span>) {
+      readModule(classVisitor, context, moduleOffset, modulePackagesOffset, moduleMainClass);
+    }
+
+    <span class="hljs-comment">// Visit the NestHost attribute.</span>
+    <span class="hljs-keyword">if</span> (nestHostClass != <span class="hljs-keyword">null</span>) {
+      classVisitor.visitNestHostExperimental(nestHostClass);
+    }
+
+    <span class="hljs-comment">// Visit the EnclosingMethod attribute.</span>
+    <span class="hljs-keyword">if</span> (enclosingMethodOffset != <span class="hljs-number">0</span>) {
+      String className = readClass(enclosingMethodOffset, charBuffer);
+      <span class="hljs-keyword">int</span> methodIndex = readUnsignedShort(enclosingMethodOffset + <span class="hljs-number">2</span>);
+      String name = methodIndex == <span class="hljs-number">0</span> ? <span class="hljs-keyword">null</span> : readUTF8(cpInfoOffsets[methodIndex], charBuffer);
+      String type = methodIndex == <span class="hljs-number">0</span> ? <span class="hljs-keyword">null</span> : readUTF8(cpInfoOffsets[methodIndex] + <span class="hljs-number">2</span>, charBuffer);
+      classVisitor.visitOuterClass(className, name, type);
+    }
+
+    <span class="hljs-comment">// Visit the RuntimeVisibleAnnotations attribute.</span>
+    <span class="hljs-keyword">if</span> (runtimeVisibleAnnotationsOffset != <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">int</span> numAnnotations = readUnsignedShort(runtimeVisibleAnnotationsOffset);
+      <span class="hljs-keyword">int</span> currentAnnotationOffset = runtimeVisibleAnnotationsOffset + <span class="hljs-number">2</span>;
+      <span class="hljs-keyword">while</span> (numAnnotations-- &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-comment">// Parse the type_index field.</span>
+        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
+        currentAnnotationOffset += <span class="hljs-number">2</span>;
+        <span class="hljs-comment">// Parse num_element_value_pairs and element_value_pairs and visit these values.</span>
+        currentAnnotationOffset =
+            readElementValues(
+                classVisitor.visitAnnotation(annotationDescriptor, <span class="hljs-comment">/* visible = */</span> <span class="hljs-keyword">true</span>),
+                currentAnnotationOffset,
+                <span class="hljs-comment">/* named = */</span> <span class="hljs-keyword">true</span>,
+                charBuffer);
+      }
+    }
+
+    <span class="hljs-comment">// Visit the RuntimeInvisibleAnnotations attribute.</span>
+    <span class="hljs-keyword">if</span> (runtimeInvisibleAnnotationsOffset != <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">int</span> numAnnotations = readUnsignedShort(runtimeInvisibleAnnotationsOffset);
+      <span class="hljs-keyword">int</span> currentAnnotationOffset = runtimeInvisibleAnnotationsOffset + <span class="hljs-number">2</span>;
+      <span class="hljs-keyword">while</span> (numAnnotations-- &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-comment">// Parse the type_index field.</span>
+        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
+        currentAnnotationOffset += <span class="hljs-number">2</span>;
+        <span class="hljs-comment">// Parse num_element_value_pairs and element_value_pairs and visit these values.</span>
+        currentAnnotationOffset =
+            readElementValues(
+                classVisitor.visitAnnotation(annotationDescriptor, <span class="hljs-comment">/* visible = */</span> <span class="hljs-keyword">false</span>),
+                currentAnnotationOffset,
+                <span class="hljs-comment">/* named = */</span> <span class="hljs-keyword">true</span>,
+                charBuffer);
+      }
+    }
+
+    <span class="hljs-comment">// Visit the RuntimeVisibleTypeAnnotations attribute.</span>
+    <span class="hljs-keyword">if</span> (runtimeVisibleTypeAnnotationsOffset != <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">int</span> numAnnotations = readUnsignedShort(runtimeVisibleTypeAnnotationsOffset);
+      <span class="hljs-keyword">int</span> currentAnnotationOffset = runtimeVisibleTypeAnnotationsOffset + <span class="hljs-number">2</span>;
+      <span class="hljs-keyword">while</span> (numAnnotations-- &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-comment">// Parse the target_type, target_info and target_path fields.</span>
+        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
+        <span class="hljs-comment">// Parse the type_index field.</span>
+        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
+        currentAnnotationOffset += <span class="hljs-number">2</span>;
+        <span class="hljs-comment">// Parse num_element_value_pairs and element_value_pairs and visit these values.</span>
+        currentAnnotationOffset =
+            readElementValues(
+                classVisitor.visitTypeAnnotation(
+                    context.currentTypeAnnotationTarget,
+                    context.currentTypeAnnotationTargetPath,
+                    annotationDescriptor,
+                    <span class="hljs-comment">/* visible = */</span> <span class="hljs-keyword">true</span>),
+                currentAnnotationOffset,
+                <span class="hljs-comment">/* named = */</span> <span class="hljs-keyword">true</span>,
+                charBuffer);
+      }
+    }
+
+    <span class="hljs-comment">// Visit the RuntimeInvisibleTypeAnnotations attribute.</span>
+    <span class="hljs-keyword">if</span> (runtimeInvisibleTypeAnnotationsOffset != <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">int</span> numAnnotations = readUnsignedShort(runtimeInvisibleTypeAnnotationsOffset);
+      <span class="hljs-keyword">int</span> currentAnnotationOffset = runtimeInvisibleTypeAnnotationsOffset + <span class="hljs-number">2</span>;
+      <span class="hljs-keyword">while</span> (numAnnotations-- &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-comment">// Parse the target_type, target_info and target_path fields.</span>
+        currentAnnotationOffset = readTypeAnnotationTarget(context, currentAnnotationOffset);
+        <span class="hljs-comment">// Parse the type_index field.</span>
+        String annotationDescriptor = readUTF8(currentAnnotationOffset, charBuffer);
+        currentAnnotationOffset += <span class="hljs-number">2</span>;
+        <span class="hljs-comment">// Parse num_element_value_pairs and element_value_pairs and visit these values.</span>
+        currentAnnotationOffset =
+            readElementValues(
+                classVisitor.visitTypeAnnotation(
+                    context.currentTypeAnnotationTarget,
+                    context.currentTypeAnnotationTargetPath,
+                    annotationDescriptor,
+                    <span class="hljs-comment">/* visible = */</span> <span class="hljs-keyword">false</span>),
+                currentAnnotationOffset,
+                <span class="hljs-comment">/* named = */</span> <span class="hljs-keyword">true</span>,
+                charBuffer);
+      }
+    }
+
+    <span class="hljs-comment">// 访问非标准的属性</span>
+    <span class="hljs-comment">// Visit the non standard attributes.</span>
+    <span class="hljs-keyword">while</span> (attributes != <span class="hljs-keyword">null</span>) {
+      <span class="hljs-comment">// Copy and reset the nextAttribute field so that it can also be used in ClassWriter.</span>
+      Attribute nextAttribute = attributes.nextAttribute;
+      attributes.nextAttribute = <span class="hljs-keyword">null</span>;
+      classVisitor.visitAttribute(attributes);
+      attributes = nextAttribute;
+    }
+
+    <span class="hljs-comment">// Visit the NestedMembers attribute.</span>
+    <span class="hljs-keyword">if</span> (nestMembersOffset != <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">int</span> numberOfNestMembers = readUnsignedShort(nestMembersOffset);
+      <span class="hljs-keyword">int</span> currentNestMemberOffset = nestMembersOffset + <span class="hljs-number">2</span>;
+      <span class="hljs-keyword">while</span> (numberOfNestMembers-- &gt; <span class="hljs-number">0</span>) {
+        classVisitor.visitNestMemberExperimental(readClass(currentNestMemberOffset, charBuffer));
+        currentNestMemberOffset += <span class="hljs-number">2</span>;
+      }
+    }
+
+    <span class="hljs-comment">// Visit the InnerClasses attribute.</span>
+    <span class="hljs-keyword">if</span> (innerClassesOffset != <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">int</span> numberOfClasses = readUnsignedShort(innerClassesOffset);
+      <span class="hljs-keyword">int</span> currentClassesOffset = innerClassesOffset + <span class="hljs-number">2</span>;
+      <span class="hljs-keyword">while</span> (numberOfClasses-- &gt; <span class="hljs-number">0</span>) {
+        classVisitor.visitInnerClass(
+            readClass(currentClassesOffset, charBuffer),
+            readClass(currentClassesOffset + <span class="hljs-number">2</span>, charBuffer),
+            readUTF8(currentClassesOffset + <span class="hljs-number">4</span>, charBuffer),
+            readUnsignedShort(currentClassesOffset + <span class="hljs-number">6</span>));
+        currentClassesOffset += <span class="hljs-number">8</span>;
+      }
+    }
+
+    <span class="hljs-comment">// 访问字段和方法</span>
+    <span class="hljs-comment">// Visit the fields and methods.</span>
+    <span class="hljs-keyword">int</span> fieldsCount = readUnsignedShort(currentOffset);
+    currentOffset += <span class="hljs-number">2</span>;
+    <span class="hljs-keyword">while</span> (fieldsCount-- &gt; <span class="hljs-number">0</span>) {
+      currentOffset = readField(classVisitor, context, currentOffset);
+    }
+    <span class="hljs-keyword">int</span> methodsCount = readUnsignedShort(currentOffset);
+    currentOffset += <span class="hljs-number">2</span>;
+    <span class="hljs-keyword">while</span> (methodsCount-- &gt; <span class="hljs-number">0</span>) {
+      currentOffset = readMethod(classVisitor, context, currentOffset);
+    }
+
+    <span class="hljs-comment">// Visit the end of the class.</span>
+    classVisitor.visitEnd();
+  }</code></pre><h3>小结</h3>
+<p>其实，将整个 ClassReader 理解成一个对 .class 字节文件的解析器不失为一种可行的认知。</p>
+<ol>
+<li>在构造方法中完成对 .class 文件 minor_version, major_version 的确认。</li>
+<li>继而完成对整个 Constants_pool 的解析</li>
+<li>以及 BootstarpMethod 属性的定位</li>
+<li>之后在 accept(...) 方法中逐一调用相应的访问者实现类实现对不同内容的访问。</li>
+</ol>
+<p>但是，要注意的是，ClassReader 绝对不会涉及到对其解析的 .class 文件内容的写操作。
+所有的写操作都基于不同的目的，在 ClassVisitor 中实现。</p>
+<h2>ClassVisitor</h2>
+<p>Java .class 的访问者，按照严格的顺序规范逐一调用</p>
+<p>visit
+[ visitSource ] [ visitModule ][ visitNestHost ][ visitOuterClass ]
+( visitAnnotation | visitTypeAnnotation | visitAttribute )*
+( visitNestMember | visitInnerClass | visitField | visitMethod )*
+visitEnd.</p>
+<p>各个 visitXXX 方法</p>
+<pre><code class="hljs"><span class="hljs-keyword">public</span> <span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ClassVisitor</span> </span>{
+
+  <span class="hljs-comment">/**
+   * 访问类的首部
+      */</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">visit</span><span class="hljs-params">(<span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> version, <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> access, <span class="hljs-keyword">final</span> String name, <span class="hljs-keyword">final</span> String signature, <span class="hljs-keyword">final</span> String superName, <span class="hljs-keyword">final</span> String[] interfaces)</span> </span>{}
+
+  <span class="hljs-comment">/**
+   * 访问类的源文件名等
+      */</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">visitSource</span><span class="hljs-params">(<span class="hljs-keyword">final</span> String source, <span class="hljs-keyword">final</span> String debug)</span> </span>{}
+
+  <span class="hljs-comment">/**
+   * 访问与类关联的模块
+      */</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> ModuleVisitor <span class="hljs-title">visitModule</span><span class="hljs-params">(<span class="hljs-keyword">final</span> String name, <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> access, <span class="hljs-keyword">final</span> String version)</span> </span>{}
+
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">visitOuterClass</span><span class="hljs-params">(<span class="hljs-keyword">final</span> String owner, <span class="hljs-keyword">final</span> String name, <span class="hljs-keyword">final</span> String descriptor)</span> </span>{}
+
+  <span class="hljs-function"><span class="hljs-keyword">public</span> AnnotationVisitor <span class="hljs-title">visitAnnotation</span><span class="hljs-params">(<span class="hljs-keyword">final</span> String descriptor, <span class="hljs-keyword">final</span> <span class="hljs-keyword">boolean</span> visible)</span> </span>{}
+
+  <span class="hljs-function"><span class="hljs-keyword">public</span> AnnotationVisitor <span class="hljs-title">visitTypeAnnotation</span><span class="hljs-params">(
+      <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> typeRef, <span class="hljs-keyword">final</span> TypePath typePath, <span class="hljs-keyword">final</span> String descriptor, <span class="hljs-keyword">final</span> <span class="hljs-keyword">boolean</span> visible)</span> </span>{}
+
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">visitAttribute</span><span class="hljs-params">(<span class="hljs-keyword">final</span> Attribute attribute)</span> </span>{}
+
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">visitInnerClass</span><span class="hljs-params">(
+      <span class="hljs-keyword">final</span> String name, <span class="hljs-keyword">final</span> String outerName, <span class="hljs-keyword">final</span> String innerName, <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> access)</span> </span>{}
+
+  <span class="hljs-comment">/**
+   * 访问类的变量
+      */</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> FieldVisitor <span class="hljs-title">visitField</span><span class="hljs-params">(
+      <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> access,
+      <span class="hljs-keyword">final</span> String name,
+      <span class="hljs-keyword">final</span> String descriptor,
+      <span class="hljs-keyword">final</span> String signature,
+      <span class="hljs-keyword">final</span> Object value)</span> </span>{}
+
+  <span class="hljs-comment">/**
+   * 访问类的方法
+      */</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> MethodVisitor <span class="hljs-title">visitMethod</span><span class="hljs-params">(
+      <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> access,
+      <span class="hljs-keyword">final</span> String name,
+      <span class="hljs-keyword">final</span> String descriptor,
+      <span class="hljs-keyword">final</span> String signature,
+      <span class="hljs-keyword">final</span> String[] exceptions)</span> </span>{}
+
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">visitEnd</span><span class="hljs-params">()</span> </span>{}
+}</code></pre><p>随着 visitXxx() 方法的逐一执行，ClassVisitor 将对当前的 .class 文件越来越熟悉，并逐渐补全常量池(由 SymbolTable 持有并维护)</p>
+<h2>总结</h2>
+<p>到此为止，对整个 ClassReader &amp; ClassVisitor 将有一个基础而简单的印象。</p>
+<p>ClassReader 通过对 .class 文件字节码的解析而获得对这个类的具体印象(更多的偏向是随意访问 .class 的各种细节)。</p>
+<p>ClassVisitor 通过 visitXxx(...) 方法，由其它对象(可以是 ClassReader, 也可以直接是 Coder)逐渐对其开放一些 .class 的细节，
+但需要 ClassVisitor 自行维护获得的内容(如果有必要的话)。由此得到对 .class 全部内容的了解(当然，如果本身 visitXxx() 得到的内容不全，则了解的自然有限)。</p>
+<pre><code class="hljs">__                    __                  
+ / _| __ _ _ __   __ _ / _| ___ _ __   __ _ 
+| |_ / _` | '_ \ / _` | |_ / _ \ '_ \ / _` |
+|  _| (_| | | | | (_| |  _|  __/ | | | (_| |
+|_|  \__,_|_| |_|\__, |_|  \___|_| |_|\__, |
+                 |___/                |___/</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"fullUrl":"/2018-06-25-ASM-Core"},"buildId":"xx4WXnl7odya2QE7dUtyW","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>

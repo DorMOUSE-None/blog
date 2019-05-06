@@ -1,0 +1,76 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><h2>配置参数</h2>
+<p><strong>命令行使用</strong></p>
+<p>在 java 启动命令中添加参数配置项 <code>-Dcglib.debugLocation=&lt;Custom Path&gt;</code></p>
+<p><strong>编码实现</strong></p>
+<p>在执行 CGlib 获取新生成类之前，调用 <code>System.setProperty(&quot;cglib.debugLocation&quot;, &lt;Custom Path&gt;)</code></p>
+<p>&lt;!-- more --&gt;</p>
+<h2>如何游刃有余地 Debug 掺杂 CGlib 生成类的调用链</h2>
+<p>经常会遇到，项目中不经意间就遇到了 CGlib 代理，然后对调用链的 Debug 就开始出现断层。继而，对对象或实例变量的跟踪就显得一头雾水。</p>
+<p>特别是在不了解生成类到底是增强了那些内容的时候，甚至可能连调用链都跟踪不下去了 T_T 。</p>
+<p>通过 <strong>配置参数</strong> 一节的内容，你就可以在你理想的目录 <code>&lt;Custom Path&gt;</code> 下看到<strong>所谓黑盒</strong>中生成类的完成内容了。</p>
+<p>下面的内容，将简单地介绍如何配合 CGlib 生成类的内容实现: 保证 Debug 的每一步骤可见; 保证 Debug 的过程不会出现<em>黑盒</em>。</p>
+<h3>确定 <code>&lt;Custom Path&gt;</code> 下哪个文件是原有 Java 类的生成类</h3>
+<pre><code class="hljs"><span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">getClassName</span><span class="hljs-params">(String prefix, String source, Object key, Predicate names)</span> </span>{
+    <span class="hljs-keyword">if</span> (prefix == <span class="hljs-keyword">null</span>) {
+        prefix = <span class="hljs-string">"net.sf.cglib.empty.Object"</span>;
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (prefix.startsWith(<span class="hljs-string">"java"</span>)) {
+        prefix = <span class="hljs-string">"$"</span> + prefix;
+    }
+    String base =
+        prefix + <span class="hljs-string">"$$"</span> +
+        source.substring(source.lastIndexOf(<span class="hljs-string">'.'</span>) + <span class="hljs-number">1</span>) +
+        getTag() + <span class="hljs-string">"$$"</span> +
+        Integer.toHexString(STRESS_HASH_CODE ? <span class="hljs-number">0</span> : key.hashCode());
+    String attempt = base;
+    <span class="hljs-keyword">int</span> index = <span class="hljs-number">2</span>;
+    <span class="hljs-keyword">while</span> (names.evaluate(attempt))
+        attempt = base + <span class="hljs-string">"_"</span> + index++;
+    <span class="hljs-keyword">return</span> attempt;
+}</code></pre><p>CGlib 默认的类名生成策略下，生成类的全限定名将结合原文件的全限定名决定。</p>
+<p>通常命名如下: <code>&lt;原 Java 类全限定名&gt;$$&lt;类似 EnhancerByCGlib&gt;$$&lt;生成类核心内容的 hash 值&gt;_&lt;index[可能存在]&gt;</code></p>
+<p>例如: 原有 Java 类全限定名为 me.fangfeng.Test ，则生成类名可能为 <code>me.fangfeng.Test$$EnhancerByCGlib$$ab1203aa</code></p>
+<p>当然，通常情况下会存在一个类名形如 <code>me.fangfeng.Test$$FastClassBySpring$$...</code> 的类，这是作为生成类 <code>me.fangfeng.Test$$EnhancerByCGlib$$ab1203aa</code> 的辅助类来使用。</p>
+<h3>简单了解生成类下的调用关系</h3>
+<p>Java 代码触发被增强的类，将首先调用生成类。但是，这是没办法进行 Debug 的，因为这个生成类的字节码缺少 SourceFile 属性，同时缺少 LineNumberTable 属性。</p>
+<p>但是，这并不影响对调用链的跟踪。</p>
+<p>CGlib 的增强，所有的增强逻辑都是以 Callback 实现类的形式来提供的。同时在 CGlib 生成类中也有 Callback 的实例变量来持有这些注入的 Callback 。</p>
+<p><strong>原有 Java 类</strong></p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1ft8e7kr7qvj30sc0j0wh4.jpg" alt="LogonService.java"></p>
+<p><strong>对应的生成类</strong></p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1ft8e9ww4hqj31hg0oojzv.jpg" alt=""></p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1ft8eanb6c9j31j00lgn1e.jpg" alt=""></p>
+<p><strong>跟踪 LogonService.addLogon(String var1) 演示</strong></p>
+<p>当前 LogonService 的生成类全限定名为me.fangfeng.transactionBugs.LogonService$$EnhancerBySpringCGLIB$$bfc1dc3.class; 以下简称为 LogonSerivce$$bfc1dc3</p>
+<ol>
+<li>
+<p>首先，配置 <code>cglib.debugLocation</code> 参数，值 = 项目生成的 .class 路径</p>
+</li>
+<li>
+<p>无断点直接运行一次需要处理的逻辑</p>
+</li>
+<li>
+<p>找到 LogonSerive$$bfc1dc3.class, 随意打上一个看似有效的断点</p>
+</li>
+<li>
+<p>在各处打上必要的断点，开始进行真正的调试工作</p>
+</li>
+<li>
+<p>代码执行到 LogonService$$bfc1dc3.class, 虽然没有真正进入断点位置, 但是可以看到这个 LogonService$$bfc1dc3 实例的实例变量信息</p>
+</li>
+</ol>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1ft8eq1be61j319w0bwtde.jpg" alt=""></p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1ft8egtg1naj31ji0fmgp2.jpg" alt=""></p>
+<p>比照生成类代码中 addLogon(String var1) 方法体的内容以及展示的实例变量信息。可以看到生成类调用的 Callback 实例是 <code>CGLIB$CALLBACK_0</code>
+类型是 CglibAopProxy 的静态内部私有类 DynamicAdvisedInterceptor 。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1ft8eu91oscj31gq0ayju5.jpg" alt=""></p>
+<p>在 intercept(...) 上打个断点，跳过生成类 addLogon(String var1) 方法的下一个调用方法就是 intercept(...)</p>
+<p><strong>而且事实上，CGlib 生成类的内容基本也就是对调用方法进行的一种转发</strong></p>
+<ol start="6">
+<li>继续 Debug ，对于生成类的内容，人肉了解并定位到触发的 Callback 实例或者 super.Xxx() 方法。</li>
+</ol>
+<pre><code class="hljs">__                    __                  
+ / _| __ _ _ __   __ _ / _| ___ _ __   __ _ 
+| |_ / _` | '_ \ / _` | |_ / _ \ '_ \ / _` |
+|  _| (_| | | | | (_| |  _|  __/ | | | (_| |
+|_|  \__,_|_| |_|\__, |_|  \___|_| |_|\__, |
+                 |___/                |___/</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"fullUrl":"/2018-07-13-How-to-easily-get-CGlib-generated-code"},"buildId":"xx4WXnl7odya2QE7dUtyW","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>
