@@ -1,7 +1,6 @@
-<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><p>这次拖得有够久的，毕竟需要将知识串联起来并不是一件容易的事情。更何况很多内容可以说和常理(个人理解的常理)有了比较大的偏差。</p>
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><p>这次拖得有够久的，毕竟需要将知识串联起来并不是一件容易的事情。更何况很多内容可以说和常理(个人理解的常理)有了比较大的偏差。</p>
 <p>不过确实比较有意思。从引导程序到操作系统启动，这中间究竟经历了多少流程呢？</p>
 <p>由于有了前几节的内容，这里不会再对引导程序及汇编语法做过多的介绍。而着重在于整个流程的描述。</p>
-<p>&lt;!-- more --&gt;</p>
 <h2>引导程序</h2>
 <p>从 BIOS 将512字节长的引导程序加载到物理内存<code>0x7c00</code>开始的连续递增空间后，即将程序的执行权交给了引导程序(这里指的执行权可以简单理解成CS:IP)</p>
 <blockquote>
@@ -35,23 +34,23 @@
 <p>但是，总还得解除禁止吧。因此，setup 程序尽快地重新编制了硬件中断，进入保护模式。使用保护模式下的中断描述符表来替代 BIOS 中断向量表。</p>
 <p>至于如何创建中断描述符表，哈哈，这都是直接在汇编编程的时候写好的。直接划出了一块区域写上了中断描述符表的表项，然后与 setup 代码一起被读取到了内存的指定位置。至于唯一要做的，就是将 IDTR (中断描述符表寄存器) 修改为中断描述符表在内存的开始地址。</p>
 <p><strong>进入保护模式</strong></p>
-<p>首先，简单介绍一下实模式 &amp; 保护模式。</p>
+<p>首先，简单介绍一下实模式 &#x26; 保护模式。</p>
 <p>保护模式与实模式的主要区别，就在于两者的内存寻址方式，归根结底也就是段寄存器如何辅助完成内存地址定位的问题。</p>
 <p>先简单的回顾下实模式下的寻址方式</p>
 <p>段寄存器的出现，很大程度上是为了对 16 bit CPU 下可寻址地址不足所作出的补充。
-诸如 CS:IP = 0x07C0:0x0001 -&gt; 0x07C01 。通过CS:IP 的配合，物理地址 = CS &lt;&lt; 4 + IP ，将原本 128 KB 的可寻址空间扩展到 0xFFFF:0xFFFF -&gt; 0x10FFFE 的寻址空间</p>
+诸如 CS:IP = 0x07C0:0x0001 -> 0x07C01 。通过CS:IP 的配合，物理地址 = CS &#x3C;&#x3C; 4 + IP ，将原本 128 KB 的可寻址空间扩展到 0xFFFF:0xFFFF -> 0x10FFFE 的寻址空间</p>
 <p>而保护模式的出现，也是由于实模式下的地址寻址仍然不能满足对内存寻址的需求。</p>
 <p>那么保护模式究竟将如何进行寻址呢？简单来说就是通过新增了一个寄存器 GDTR (全局描述符表寄存器。当然，暂时不考虑 LDTR) 用来存储全局描述符表(全局描述符表是一些在内存中的有结构的数据) ，那么类似的，本来是段寄存器中是表示一个内存段基址，现在通过借助中间项 (GDTR) ，由全局描述符表的每一个表项来表示每一个内存段基址，从而达到在最大 4GB 的内存中进行内存地址的寻址。</p>
 <p>而与上面的中断描述符表类似的，全局描述符表也是以同样的方式，预先写好，然后设置一下 GDTR 就 OK 了。</p>
 <p><strong>转入操作系统程序</strong></p>
 <p>最后的最后，当然是把控制权交给操作系统程序。即跳转到内存 0x00000 处。当然，由于现在已经处于保护模式下，因此 jmp 指令略有不同。 为 <code>jmpi 0, 8</code>。</p>
-<p>简单解释一下这一条指令</p>
+<p>简单解释一下这一条指令 </p>
 <p><code>jmpi</code> 指令表示进行段间跳转。(段间跳转与段内跳转的区别在于: 程序代码的寻址一般通过 CS:IP 配合完成，如果是段内跳转，则段基址不变，即 CS 不变，只需要给出 IP 即可；而段间跳转需要同时给出新的段基址(CS)和新的段偏移(IP)。</p>
 <p><code>0</code> 这里 0 就表示的是段偏移。</p>
 <p><code>8</code> 保护模式下的段寄存器以一种特殊的方式来配合 GDTR/LDTR 来完成对全局/局部描述符表项的定位。如下图所示。最后两位表示特权级，用于区分用户态(11) or 内核态(00) (Linux 只使用了两个，还有 01 和 10 不使用)</p>
 <p>第三位表示使用 GDTR 还是 LDTR</p>
 <p>高 13 位共同组成了对 GDTR/LDTR 表项的描述，究竟使用哪一个表项。当然，这里其实也侧面反映了，其实每个全局描述符表/局部描述符表最多只能有 $2^{13} = 8192$ 个表项。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fulm7vumywj31220aw74f.jpg" alt=""></p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fulm7vumywj31220aw74f.jpg"></p>
 <h2>操作系统程序</h2>
 <p>终于要到操作系统程序了。这个就比较复杂了。这里只简单描述将操作系统启动起来的最基本使用到的代码。其它以后继续。</p>
 <p>其实整一个操作系统程序是一个比较大的量，毕竟最大能够达到 512 KB 呢。</p>
@@ -74,99 +73,103 @@
 <h3>main.c</h3>
 <p>下面将简单给出 main.c 程序的两段代码 <code>main(...)</code> 和 <code>init(...)</code>，并直接针对代码进行直接解释。</p>
 <h4>main(void)</h4>
-<pre><code class="hljs"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span>		
-</span>{
- 	ROOT_DEV = ORIG_ROOT_DEV;   <span class="hljs-comment">// 读取在引导程序执行时获取到的文件系统所在的磁盘</span>
- 	drive_info = DRIVE_INFO;
-	memory_end = (<span class="hljs-number">1</span>&lt;&lt;<span class="hljs-number">20</span>) + (EXT_MEM_K&lt;&lt;<span class="hljs-number">10</span>); <span class="hljs-comment">// 首先先确认整个内存的大小</span>
-	memory_end &amp;= <span class="hljs-number">0xfffff000</span>;               <span class="hljs-comment">// 当然，这里为了分页方便 (每页 4096 B)，直接将不满一页的内存忽略掉了</span>
-	<span class="hljs-keyword">if</span> (memory_end &gt; <span class="hljs-number">16</span>*<span class="hljs-number">1024</span>*<span class="hljs-number">1024</span>)          <span class="hljs-comment">// 最大支持 16 MB 的内存，这里是 Linus 当时的机器只有 16 MB，因此没有做更大内存的支持，但可以自己去改源码</span>
-		memory_end = <span class="hljs-number">16</span>*<span class="hljs-number">1024</span>*<span class="hljs-number">1024</span>;
-	<span class="hljs-keyword">if</span> (memory_end &gt; <span class="hljs-number">12</span>*<span class="hljs-number">1024</span>*<span class="hljs-number">1024</span>)          <span class="hljs-comment">// 确认缓存区的末地址 (根据实际内存大小调整, &gt;12MB 留 4MB 缓存，&gt;6MB 留 2 MB 缓存，否则 1MB )</span>
-		buffer_memory_end = <span class="hljs-number">4</span>*<span class="hljs-number">1024</span>*<span class="hljs-number">1024</span>;
-	<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (memory_end &gt; <span class="hljs-number">6</span>*<span class="hljs-number">1024</span>*<span class="hljs-number">1024</span>)
-		buffer_memory_end = <span class="hljs-number">2</span>*<span class="hljs-number">1024</span>*<span class="hljs-number">1024</span>;
-	<span class="hljs-keyword">else</span>
-		buffer_memory_end = <span class="hljs-number">1</span>*<span class="hljs-number">1024</span>*<span class="hljs-number">1024</span>;
-	main_memory_start = buffer_memory_end;
-<span class="hljs-meta">#<span class="hljs-meta-keyword">ifdef</span> RAMDISK</span>
-	main_memory_start += rd_init(main_memory_start, RAMDISK*<span class="hljs-number">1024</span>);      <span class="hljs-comment">// 如果需要虚拟盘，则再留一部分作为交换区</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
-	mem_init(main_memory_start,memory_end); <span class="hljs-comment">// 内存初始化，毕竟 Linux 操作系统下的所有内存都将被统一分配，用户程序没有权限随便使用内存，只能用被分配的</span>
-	trap_init();            <span class="hljs-comment">// 初始化中断</span>
-	blk_dev_init();         <span class="hljs-comment">// 初始化块设备</span>
-	chr_dev_init();         <span class="hljs-comment">// 初始化字符设备</span>
-	tty_init();             <span class="hljs-comment">// 初始化 tty</span>
-	time_init();            <span class="hljs-comment">// 设置开机启动时间</span>
-	sched_init();           <span class="hljs-comment">// 初始化任务调度程序，由此就将可以进行多任务切换了</span>
-	buffer_init(buffer_memory_end); <span class="hljs-comment">// 缓存区初始化</span>
-	hd_init();              <span class="hljs-comment">// 硬盘初始化</span>
-	floppy_init();          <span class="hljs-comment">// 软盘初始化</span>
-	sti();                  <span class="hljs-comment">// 不再禁止中断，现在开始又允许中断了</span>
-	move_to_user_mode();    <span class="hljs-comment">// 进入用户态</span>
-	<span class="hljs-keyword">if</span> (!fork()) {          <span class="hljs-comment">// 关于 fork 函数，下面将简单介绍。</span>
-		init();
-	}
+<pre><code class="language-c">void main(void)     
+{
+    ROOT_DEV = ORIG_ROOT_DEV;   // 读取在引导程序执行时获取到的文件系统所在的磁盘
+    drive_info = DRIVE_INFO;
+    memory_end = (1&#x3C;&#x3C;20) + (EXT_MEM_K&#x3C;&#x3C;10); // 首先先确认整个内存的大小
+    memory_end &#x26;= 0xfffff000;               // 当然，这里为了分页方便 (每页 4096 B)，直接将不满一页的内存忽略掉了
+    if (memory_end > 16*1024*1024)          // 最大支持 16 MB 的内存，这里是 Linus 当时的机器只有 16 MB，因此没有做更大内存的支持，但可以自己去改源码
+        memory_end = 16*1024*1024;
+    if (memory_end > 12*1024*1024)          // 确认缓存区的末地址 (根据实际内存大小调整, >12MB 留 4MB 缓存，>6MB 留 2 MB 缓存，否则 1MB )
+        buffer_memory_end = 4*1024*1024;
+    else if (memory_end > 6*1024*1024)
+        buffer_memory_end = 2*1024*1024;
+    else
+        buffer_memory_end = 1*1024*1024;
+    main_memory_start = buffer_memory_end;
+#ifdef RAMDISK
+    main_memory_start += rd_init(main_memory_start, RAMDISK*1024);      // 如果需要虚拟盘，则再留一部分作为交换区
+#endif
+    mem_init(main_memory_start,memory_end); // 内存初始化，毕竟 Linux 操作系统下的所有内存都将被统一分配，用户程序没有权限随便使用内存，只能用被分配的
+    trap_init();            // 初始化中断
+    blk_dev_init();         // 初始化块设备
+    chr_dev_init();         // 初始化字符设备
+    tty_init();             // 初始化 tty
+    time_init();            // 设置开机启动时间
+    sched_init();           // 初始化任务调度程序，由此就将可以进行多任务切换了
+    buffer_init(buffer_memory_end); // 缓存区初始化
+    hd_init();              // 硬盘初始化
+    floppy_init();          // 软盘初始化
+    sti();                  // 不再禁止中断，现在开始又允许中断了
+    move_to_user_mode();    // 进入用户态
+    if (!fork()) {          // 关于 fork 函数，下面将简单介绍。
+        init();
+    }
 
-	<span class="hljs-keyword">for</span>(;;) pause();
-}</code></pre><p><strong>fork()</strong></p>
+    for(;;) pause();
+}
+</code></pre>
+<p><strong>fork()</strong></p>
 <p>如果熟悉 C 语言，应该对 fork() 也比较熟悉吧。这将执行一次系统调用，最终的结果是，创建一个新的任务 (这里将原来的操作系统程序认为是 0 号进程/任务，将产生 1 号进程/任务)。新的任务与原有任务几乎一模一样，除了 fork() 调用的返回值不同。子任务将返回 0 ，原有任务将返回子任务的任务号。</p>
 <p>因此，对于上面的代码，<code>if(!fork())</code> ，0号任务将不执行 <code>if(){}</code> 语句块内的 init ，而 1 号任务将执行 <code>init()</code> 函数</p>
-<p>而 0 号进程在做什么呢?</p>
-<p>很简单，下面 <code>for(;;) pause();</code>。 <code>pause()</code> 是指让 CPU 完全停止，只有发生硬件中断， CPU 才会从停止状态中恢复 (前面已经设置了定时的/ 10ms/次的时钟中断，因此 CPU 总是能够恢复)，</p>
+<p>而 0 号进程在做什么呢? </p>
+<p>很简单，下面 <code>for(;;) pause();</code>。 <code>pause()</code> 是指让 CPU 完全停止，只有发生硬件中断， CPU 才会从停止状态中恢复 (前面已经设置了定时的/ 10ms/次的时钟中断，因此 CPU 总是能够恢复)， </p>
 <p>具体的描述就是，如果任务调度程序把时间片分配给了 0 号进程，那么 0 号进程唯一做的，就是让 CPU 停止。而且 0 号进程的 <code>for</code> 是死循环，每次把时间分配给 0 号进程，它就 CPU 停止。我们在 Linux 操作系统上，通过 top 可以看到对 cpu 有如下描述</p>
 <pre><code>%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
 </code></pre>
 <p>其中对 idle(id) 的统计，其实就在 0 号任务让 cpu 停止工作了而已。</p>
 <h4>init(void)</h4>
-<pre><code class="hljs"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">init</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span>
-</span>{
-	<span class="hljs-keyword">int</span> pid,i;
+<pre><code class="language-c">void init(void)
+{
+    int pid,i;
 
-	setup((<span class="hljs-keyword">void</span> *) &amp;drive_info);
-	(<span class="hljs-keyword">void</span>) open(<span class="hljs-string">"/dev/tty0"</span>,O_RDWR,<span class="hljs-number">0</span>);
-	(<span class="hljs-keyword">void</span>) dup(<span class="hljs-number">0</span>);
-	(<span class="hljs-keyword">void</span>) dup(<span class="hljs-number">0</span>);
-	<span class="hljs-built_in">printf</span>(<span class="hljs-string">"%d buffers = %d bytes buffer space\n\r"</span>,NR_BUFFERS,
-		NR_BUFFERS*BLOCK_SIZE);
-	<span class="hljs-built_in">printf</span>(<span class="hljs-string">"Free mem: %d bytes\n\r"</span>,memory_end-main_memory_start);
-	<span class="hljs-keyword">if</span> (!(pid=fork())) {
-		close(<span class="hljs-number">0</span>);
-		<span class="hljs-keyword">if</span> (open(<span class="hljs-string">"/etc/rc"</span>,O_RDONLY,<span class="hljs-number">0</span>))
-			_exit(<span class="hljs-number">1</span>);
-		execve(<span class="hljs-string">"/bin/sh"</span>,argv_rc,envp_rc);
-		_exit(<span class="hljs-number">2</span>);
-	}
-	<span class="hljs-keyword">if</span> (pid&gt;<span class="hljs-number">0</span>)
-		<span class="hljs-keyword">while</span> (pid != wait(&amp;i))
-			<span class="hljs-comment">/* nothing */</span>;
-	<span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) {
-		<span class="hljs-keyword">if</span> ((pid=fork())&lt;<span class="hljs-number">0</span>) {
-			<span class="hljs-built_in">printf</span>(<span class="hljs-string">"Fork failed in init\r\n"</span>);
-			<span class="hljs-keyword">continue</span>;
-		}
-		<span class="hljs-keyword">if</span> (!pid) {
-			close(<span class="hljs-number">0</span>);close(<span class="hljs-number">1</span>);close(<span class="hljs-number">2</span>);
-			setsid();
-			(<span class="hljs-keyword">void</span>) open(<span class="hljs-string">"/dev/tty0"</span>,O_RDWR,<span class="hljs-number">0</span>);
-			(<span class="hljs-keyword">void</span>) dup(<span class="hljs-number">0</span>);
-			(<span class="hljs-keyword">void</span>) dup(<span class="hljs-number">0</span>);
-			_exit(execve(<span class="hljs-string">"/bin/sh"</span>,argv,envp));
-		}
-		<span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>)
-			<span class="hljs-keyword">if</span> (pid == wait(&amp;i))
-				<span class="hljs-keyword">break</span>;
-		<span class="hljs-built_in">printf</span>(<span class="hljs-string">"\n\rchild %d died with code %04x\n\r"</span>,pid,i);
-		sync();
-	}
-	_exit(<span class="hljs-number">0</span>);	<span class="hljs-comment">/* NOTE! _exit, not exit() */</span>
-}</code></pre><p>那么 1 号任务在做什么呢？看 init 的代码，可以看到大量诸如 <code>/dev/tty0</code>, <code>/bin/sh</code> 的代码。哈哈，下面通过 1,2,3... 对步骤进行标号简单描述一下。</p>
+    setup((void *) &#x26;drive_info);
+    (void) open("/dev/tty0",O_RDWR,0);
+    (void) dup(0);
+    (void) dup(0);
+    printf("%d buffers = %d bytes buffer space\n\r",NR_BUFFERS,
+        NR_BUFFERS*BLOCK_SIZE);
+    printf("Free mem: %d bytes\n\r",memory_end-main_memory_start);
+    if (!(pid=fork())) {
+        close(0);
+        if (open("/etc/rc",O_RDONLY,0))
+            _exit(1);
+        execve("/bin/sh",argv_rc,envp_rc);
+        _exit(2);
+    }
+    if (pid>0)
+        while (pid != wait(&#x26;i))
+            /* nothing */;
+    while (1) {
+        if ((pid=fork())&#x3C;0) {
+            printf("Fork failed in init\r\n");
+            continue;
+        }
+        if (!pid) {
+            close(0);close(1);close(2);
+            setsid();
+            (void) open("/dev/tty0",O_RDWR,0);
+            (void) dup(0);
+            (void) dup(0);
+            _exit(execve("/bin/sh",argv,envp));
+        }
+        while (1)
+            if (pid == wait(&#x26;i))
+                break;
+        printf("\n\rchild %d died with code %04x\n\r",pid,i);
+        sync();
+    }
+    _exit(0);   /* NOTE! _exit, not exit() */
+}
+</code></pre>
+<p>那么 1 号任务在做什么呢？看 init 的代码，可以看到大量诸如 <code>/dev/tty0</code>, <code>/bin/sh</code> 的代码。哈哈，下面通过 1,2,3... 对步骤进行标号简单描述一下。</p>
 <ol>
 <li>
 <p>1 号进程在做的是 fork 出新的进程(暂时叫它进程 X )</p>
 </li>
 <li>
-<p>1 号进程不断询问 X 是否被销毁</p>
+<p>1 号进程不断询问 X 是否被销毁 </p>
 <ul>
 <li>如果 X 进程被销毁了：那么继续执行步骤 1</li>
 <li>否则：继续执行步骤 2 （为什么会出现不断循环呢？其实由于任务调度程序的存在，在单个 CPU 看来，这个轮询并不一直发生，有一些时间片已经给了其他进程继续执行任务了</li>
@@ -176,7 +179,7 @@
 <p>X 任务通过调用 <code>execve()</code> 把当前程序的代码+数据全部替换成是 shell 的 (其实大量的用户程序都是通过这种 fork + execve 的形式出现的)</p>
 </li>
 <li>
-<p>X 任务(也就是 Shell 程序) 开始通过 tty 与用户开始交互。直到用户选择 <code>exit</code> 退出 shell</p>
+<p>X 任务(也就是 Shell 程序) 开始通过 tty 与用户开始交互。直到用户选择 <code>exit</code> 退出 shell </p>
 </li>
 </ol>
 <p><strong>execve(...)</strong></p>
@@ -306,9 +309,10 @@
 `-- tools
     `-- build.c
 </code></pre>
-<pre><code class="hljs">__                    __                  
+<pre><code class="language-plain">  __                    __                  
  / _| __ _ _ __   __ _ / _| ___ _ __   __ _ 
 | |_ / _` | '_ \ / _` | |_ / _ \ '_ \ / _` |
 |  _| (_| | | | | (_| |  _|  __/ | | | (_| |
 |_|  \__,_|_| |_|\__, |_|  \___|_| |_|\__, |
-                 |___/                |___/</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"fullUrl":"/2018-10-06-understand-Kernel-3"},"buildId":"xx4WXnl7odya2QE7dUtyW","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>
+                 |___/                |___/ 
+</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"filePath":"2018-10-06-understand-Kernel-3"},"buildId":"PwcfeKg_ImLvxRNAh_q_5","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>

@@ -1,6 +1,5 @@
-<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><p>写了两天，几乎是从零开始，C 语言搞了一个发 TCP SYN 包的小程序。
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><p>写了两天，几乎是从零开始，C 语言搞了一个发 TCP SYN 包的小程序。
 从协议到程序代码的转换，确实没有花费太多的时间，但是为了字节序(byteorder)的问题简直折腾得...</p>
-<p>&lt;!-- more --&gt;</p>
 <h2>TCP 首部格式</h2>
 <p>从 RFC 793 了解到基础的 TCP 首部格式(当然，模拟三次握手的 SYN 包也根本不需要填充任何数据)。</p>
 <pre><code>    0                   1                   2                   3
@@ -29,16 +28,16 @@
 <h2>校验和</h2>
 <p>从细节上来说，网络协议中的校验和显得比较简单。以 TCP 协议的 Checksum 字段举例，就是为了让伪首部(TCP 首部 + source IP + destination IP 等一些额外信息)
 以每 16 位 (2 字节) 为一个单位，循环累加和最终达到 0xFFFF 的效果。</p>
-<p>下面以一个由 Source IP: 172.16.2.101 -&gt; Destination IP: 172.16.2.127 的 TCP 首部为例进行细节描述:</p>
+<p>下面以一个由 Source IP: 172.16.2.101 -> Destination IP: 172.16.2.127 的 TCP 首部为例进行细节描述:</p>
 <pre><code># 总长为 20 字节的 TCP 报文首部
 27 11 0f a0 00 00 00 00 00 00 00 00 50 02 ff 00 1d 2c 00 00
 
-src Port: 0x2711 -&gt; 10001
-dst Port: 0x0fa0 -&gt; 4000
-Seq nr: 0x00000000 -&gt; 0
-Ack nr: 0x00000000 -&gt; 0
-Data off: 5 -&gt; 32 bits 数量是 5 -&gt; 20 字节 (即 TCP 首部长度为 20 字节)
-FLAG: 0x02 -&gt; urg ack psh rst SYN fin 
+src Port: 0x2711 -> 10001
+dst Port: 0x0fa0 -> 4000
+Seq nr: 0x00000000 -> 0
+Ack nr: 0x00000000 -> 0
+Data off: 5 -> 32 bits 数量是 5 -> 20 字节 (即 TCP 首部长度为 20 字节)
+FLAG: 0x02 -> urg ack psh rst SYN fin 
 Window: 0xFF00 (窗口大小为 65280 字节)
 chk sum: 0x1d2c
 urg pointer: 0x0000
@@ -53,11 +52,11 @@ urg pointer: 0x0000
 +--------+--------+--------+--------+
 
 在此例中:
-Source Address: 172.16.2.101 -&gt; 0xAC100265
-Destination Address: 172.16.2.127 -&gt; 0XAC10027F
+Source Address: 172.16.2.101 -> 0xAC100265
+Destination Address: 172.16.2.127 -> 0XAC10027F
 zero: 0x00
-PTCL(protocol): TCP(6) -&gt; 0x06
-TCP Length: 20 bytes -&gt; 0x0014
+PTCL(protocol): TCP(6) -> 0x06
+TCP Length: 20 bytes -> 0x0014
 </code></pre>
 <p>即加上伪首部的内容，需要共同进行校验的数据流如下</p>
 <pre><code>ac 10 02 65 ac 10 02 7f 00 06 00 14 27 11 0f a0 00 00 00 00 00 00 00 00 50 02 ff 00 1d 2c 00 00
@@ -65,7 +64,7 @@ TCP Length: 20 bytes -&gt; 0x0014
 <h3>服务器端校验</h3>
 <p>服务器端接收到 TCP 报文后，将对整个需要校验的数据流，按 16 bits (2字节) 为单位，进行累加。</p>
 <p>即: <code>0xac10+0x0265+0xac10+0x027f+0x0006+0x0014+0x2711+0x0fa0+0x0000+0x0000+0x0000+0x0000+0x5002+0xff00+0x1d2c+0x0000 = 0x2fffd</code></p>
-<p>对于超长计算结果 (超出 0xFFFF) ，循环将高位右移 16 位与低位进行累加，直到结果 &lt;= 0xFFFF ，即 <code>0x20000 &gt;&gt; 16 + 0xfffd = 0xffff</code></p>
+<p>对于超长计算结果 (超出 0xFFFF) ，循环将高位右移 16 位与低位进行累加，直到结果 &#x3C;= 0xFFFF ，即 <code>0x20000 >> 16 + 0xfffd = 0xffff</code></p>
 <p>如果最终结果 <code>=0xffff</code>(全为 1) ，则认为 TCP 首部没有问题，服务器端接收报文，并回复 ACK SYN 包。</p>
 <h3>客户端构造校验和</h3>
 <p>与服务器端相对，显然客户端必须通过 Check sum ，使得最终的结果服务器端校验的条件。</p>
@@ -74,18 +73,18 @@ TCP Length: 20 bytes -&gt; 0x0014
 <pre><code>ac 10 02 65 ac 10 02 7f 00 06 00 14 27 11 0f a0 00 00 00 00 00 00 00 00 50 02 ff 00 00 00 00 00
 </code></pre>
 <p>作为逆过程，按 16 bits 为单位，进行累加。即: <code>0xac10+0x0265+0xac10+0x027f+0x0006+0x0014+0x2711+0x0fa0+0x0000+0x0000+0x0000+0x0000+0x5002+0xff00+0x0000+0x0000 = 0x2e2d1</code></p>
-<p>超长部分循环累加，<code>0x20000 &gt;&gt; 16 + 0xe2d1 = 0xe2d3</code></p>
+<p>超长部分循环累加，<code>0x20000 >> 16 + 0xe2d1 = 0xe2d3</code></p>
 <p>结果取反，<code>~ 0xe2d3 = 0x1d2c</code></p>
 <p>即认为 <code>0x1d2c</code> 为校验和</p>
 <h2>HBO 与 NBO</h2>
 <p>HBO: host byte order
-NBO: network byte order</p>
+NBO: network byte order </p>
 <p>说起字节序简直能够把人逼疯，说实话虽然有一定的历史原因，但是不做统一真的对底层编程相当得不友好。</p>
 <p>不过，再厌烦也不能改变什么。总还得继续写代码不是嘛。</p>
 <h3>主机字节序 (HBO, Host Byte Order)</h3>
 <p>采用小端字节排序方式。简单描述为 高位字节存放在内存的高地址处，低位字节存储在内存的低地址处。</p>
 <p>以 4 字节 int 型数据 0xAB1267EF 为例:</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fvdu3zhh92j31040newel.jpg" alt=""></p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fvdu3zhh92j31040newel.jpg"></p>
 <p>而程序读取数据的顺序，如果不考虑数据类型，按字节读取，普遍将采用字节递增序读取，则优先将读到 0xEF 等低位字节数据</p>
 <h3>网络字节序 (NBO, Network Byte Order)</h3>
 <p>采用大端字节排序方式。简单描述为通过网络接收到数据时将优先接收到数据的高位字节，然后再得到低位字节。</p>
@@ -93,35 +92,37 @@ NBO: network byte order</p>
 <p>则通过网络得到的数据流将是 <code>0xEF 0x67 0x12 0xAB</code></p>
 <h3>实际使用</h3>
 <p>C 语言，BSD 平台的 netinet/tcp.h 定义了 tcp header 结构体。</p>
-<pre><code class="hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">tcphdr</span> {</span>
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span>	th_sport;	<span class="hljs-comment">/* source port */</span>
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span>	th_dport;	<span class="hljs-comment">/* destination port */</span>
-	tcp_seq	th_seq;			<span class="hljs-comment">/* sequence number */</span>
-	tcp_seq	th_ack;			<span class="hljs-comment">/* acknowledgement number */</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">if</span> __DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN</span>
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span>	th_x2:<span class="hljs-number">4</span>,	<span class="hljs-comment">/* (unused) */</span>
-			th_off:<span class="hljs-number">4</span>;	<span class="hljs-comment">/* data offset */</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">if</span> __DARWIN_BYTE_ORDER == __DARWIN_BIG_ENDIAN</span>
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span>	th_off:<span class="hljs-number">4</span>,	<span class="hljs-comment">/* data offset */</span>
-			th_x2:<span class="hljs-number">4</span>;	<span class="hljs-comment">/* (unused) */</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">char</span>	th_flags;
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_FIN	0x01</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_SYN	0x02</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_RST	0x04</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_PUSH	0x08</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_ACK	0x10</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_URG	0x20</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_ECE	0x40</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_CWR	0x80</span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span>	TH_FLAGS	(TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)</span>
+<pre><code class="language-c">struct tcphdr {
+    unsigned short  th_sport;   /* source port */
+    unsigned short  th_dport;   /* destination port */
+    tcp_seq th_seq;         /* sequence number */
+    tcp_seq th_ack;         /* acknowledgement number */
+#if __DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN
+    unsigned int    th_x2:4,    /* (unused) */
+            th_off:4;   /* data offset */
+#endif
+#if __DARWIN_BYTE_ORDER == __DARWIN_BIG_ENDIAN
+    unsigned int    th_off:4,   /* data offset */
+            th_x2:4;    /* (unused) */
+#endif
+    unsigned char   th_flags;
+#define TH_FIN  0x01
+#define TH_SYN  0x02
+#define TH_RST  0x04
+#define TH_PUSH 0x08
+#define TH_ACK  0x10
+#define TH_URG  0x20
+#define TH_ECE  0x40
+#define TH_CWR  0x80
+#define TH_FLAGS    (TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)
 
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span>	th_win;		<span class="hljs-comment">/* window */</span>
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span>	th_sum;		<span class="hljs-comment">/* checksum */</span>
-	<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span>	th_urp;		<span class="hljs-comment">/* urgent pointer */</span>
-};</code></pre><p>对于 <code>unsigned char</code> 之类的单字节数据，将不存在任何问题。但是，诸如 <code>unsigned short</code> 等多字节数据，将涉及到字节序的转换。</p>
-<p>比如，虽然令 <code>th_sport = 0x2711 (10001)</code> 看似合理。但是，从内存的角度来看，数据将被存储为</p>
+    unsigned short  th_win;     /* window */
+    unsigned short  th_sum;     /* checksum */
+    unsigned short  th_urp;     /* urgent pointer */
+};
+</code></pre>
+<p>对于 <code>unsigned char</code> 之类的单字节数据，将不存在任何问题。但是，诸如 <code>unsigned short</code> 等多字节数据，将涉及到字节序的转换。</p>
+<p>比如，虽然令 <code>th_sport = 0x2711 (10001)</code> 看似合理。但是，从内存的角度来看，数据将被存储为 </p>
 <pre><code># 假设起始物理内存地址为 0x00007c000
 0x00007c01: 0x27 
 0x00007c00: 0x11
@@ -130,17 +131,17 @@ NBO: network byte order</p>
 毕竟，两者相互对立。</p>
 <p>因此，需要特别注意字节序的问题。当然，C 语言还是想当友好地提供了字节序转换的工具 <code>htons</code>, <code>htonl</code>, <code>ntohs</code>, <code>ntohl</code> 。详情请通过 <code>man byteorder</code> 查看。</p>
 <h2>TCP SYN 的简单例程</h2>
-<pre><code class="hljs"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;stdio.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;stdlib.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;string.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;unistd.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;errno.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;arpa/inet.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;netinet/tcp.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;netinet/ip.h&gt;</span></span>
-<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;netinet/in.h&gt;</span></span>
+<pre><code class="language-c">#include &#x3C;stdio.h>
+#include &#x3C;stdlib.h>
+#include &#x3C;string.h>
+#include &#x3C;unistd.h>
+#include &#x3C;errno.h>
+#include &#x3C;arpa/inet.h>
+#include &#x3C;netinet/tcp.h>
+#include &#x3C;netinet/ip.h>
+#include &#x3C;netinet/in.h>
 
-<span class="hljs-comment">/**
+/**
  * +--------+--------+--------+--------+
  * |           Source Address          |
  * +--------+--------+--------+--------+
@@ -148,84 +149,87 @@ NBO: network byte order</p>
  * +--------+--------+--------+--------+
  * |  zero  |  PTCL  |    TCP Length   |
  * +--------+--------+--------+--------+
- */</span>
-<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pseudohdr</span> {</span>
-    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span> src_addr;
-    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span> dst_addr;
-    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span> zero:<span class="hljs-number">8</span>;
-    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span> protocol:<span class="hljs-number">8</span>;
-    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span> tcp_length;
+ */
+struct pseudohdr {
+    unsigned int src_addr;
+    unsigned int dst_addr;
+    unsigned short zero:8;
+    unsigned short protocol:8;
+    unsigned short tcp_length;
 
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">tcphdr</span> <span class="hljs-title">tcpHdr</span>;</span>
+    struct tcphdr tcpHdr;
 };
 
-<span class="hljs-function"><span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span> <span class="hljs-title">check_sum</span><span class="hljs-params">(<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span> *ptr, <span class="hljs-keyword">size_t</span> nbytes)</span> 
-</span>{
-    <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span> sum = <span class="hljs-number">0</span>;
+unsigned short check_sum(unsigned short *ptr, size_t nbytes) 
+{
+    unsigned int sum = 0;
 
-    <span class="hljs-keyword">while</span>(nbytes &gt; <span class="hljs-number">0</span>) 
+    while(nbytes > 0) 
     {
         sum += htons(*ptr++);
-        nbytes -= <span class="hljs-number">2</span>;
+        nbytes -= 2;
     }
 
-    sum = (sum &gt;&gt; <span class="hljs-number">16</span>) + (sum &amp; <span class="hljs-number">0xFFFF</span>);
-    sum = (sum &gt;&gt; <span class="hljs-number">16</span>) + (sum &amp; <span class="hljs-number">0xFFFF</span>);
+    sum = (sum >> 16) + (sum &#x26; 0xFFFF);
+    sum = (sum >> 16) + (sum &#x26; 0xFFFF);
 
     sum = ~sum;
-    <span class="hljs-keyword">return</span> (<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span>) sum;
+    return (unsigned short) sum;
 }
 
-<span class="hljs-function">struct tcphdr * <span class="hljs-title">init_tcp_header</span><span class="hljs-params">(<span class="hljs-keyword">int</span> sport)</span> 
-</span>{
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">tcphdr</span> * <span class="hljs-title">header</span> = (<span class="hljs-title">struct</span> <span class="hljs-title">tcphdr</span> *) <span class="hljs-title">malloc</span>(<span class="hljs-title">sizeof</span>(<span class="hljs-title">struct</span> <span class="hljs-title">tcphdr</span>));</span>
-    header-&gt;th_sport = htons(sport);    <span class="hljs-comment">// 源端口</span>
-    header-&gt;th_dport = htons(<span class="hljs-number">4000</span>);     <span class="hljs-comment">// 目标端口</span>
-    header-&gt;th_seq = <span class="hljs-number">0</span>;                <span class="hljs-comment">// 序列号</span>
-    header-&gt;th_ack = <span class="hljs-number">0</span>;                <span class="hljs-comment">// 确认序号 | ACK 置位时有效</span>
-    header-&gt;th_off = <span class="hljs-keyword">sizeof</span>(struct tcphdr) / <span class="hljs-number">4</span>;   <span class="hljs-comment">// TCP 首部长度 (字节)</span>
-    header-&gt;th_flags = TH_SYN;      <span class="hljs-comment">// 标志位</span>
-    header-&gt;th_win = <span class="hljs-number">255</span>;           <span class="hljs-comment">// 数据窗口大小</span>
-    header-&gt;th_sum = <span class="hljs-number">0</span>;             <span class="hljs-comment">// 校验值 (先置为 0, 等会再修正)</span>
-    header-&gt;th_urp = <span class="hljs-number">0</span>;
-    <span class="hljs-keyword">return</span> header;
+struct tcphdr * init_tcp_header(int sport) 
+{
+    struct tcphdr * header = (struct tcphdr *) malloc(sizeof(struct tcphdr));
+    header->th_sport = htons(sport);    // 源端口
+    header->th_dport = htons(4000);     // 目标端口
+    header->th_seq = 0;                // 序列号
+    header->th_ack = 0;                // 确认序号 | ACK 置位时有效
+    header->th_off = sizeof(struct tcphdr) / 4;   // TCP 首部长度 (字节)
+    header->th_flags = TH_SYN;      // 标志位
+    header->th_win = 255;           // 数据窗口大小
+    header->th_sum = 0;             // 校验值 (先置为 0, 等会再修正)
+    header->th_urp = 0;
+    return header;
 }
 
-<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">tcp_syn</span><span class="hljs-params">(<span class="hljs-keyword">int</span> tcp_sock, struct tcphdr *header)</span>
-</span>{
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sockaddr_in</span> *<span class="hljs-title">addr</span> = (<span class="hljs-title">struct</span> <span class="hljs-title">sockaddr_in</span> *) <span class="hljs-title">malloc</span>(<span class="hljs-title">sizeof</span>(<span class="hljs-title">struct</span> <span class="hljs-title">sockaddr_in</span>));</span>
-    addr-&gt;sin_family = PF_INET;
-    addr-&gt;sin_port = htons(<span class="hljs-number">4000</span>);
-    addr-&gt;sin_addr.s_addr = inet_addr(<span class="hljs-string">"172.16.2.127"</span>);
-    <span class="hljs-keyword">ssize_t</span> size = sendto(tcp_sock, header, <span class="hljs-keyword">sizeof</span>(struct tcphdr), <span class="hljs-number">0</span>, (struct sockaddr *)addr, <span class="hljs-keyword">sizeof</span>(addr));
+void tcp_syn(int tcp_sock, struct tcphdr *header)
+{
+    struct sockaddr_in *addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
+    addr->sin_family = PF_INET;
+    addr->sin_port = htons(4000);
+    addr->sin_addr.s_addr = inet_addr("172.16.2.127");
+    ssize_t size = sendto(tcp_sock, header, sizeof(struct tcphdr), 0, (struct sockaddr *)addr, sizeof(addr));
 }
 
-<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">int</span> argc, <span class="hljs-keyword">char</span> **argv)</span>
-</span>{
-    <span class="hljs-keyword">int</span> tcp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
-    <span class="hljs-keyword">if</span>(tcp_sock == <span class="hljs-number">-1</span>) 
+int main(int argc, char **argv)
+{
+    int tcp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
+    if(tcp_sock == -1) 
     {
-        <span class="hljs-built_in">fprintf</span>(<span class="hljs-built_in">stderr</span>, <span class="hljs-string">"Open Socket Failed: %s(errno: %d)\n"</span>, strerror(errno), errno);
-        <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);
+        fprintf(stderr, "Open Socket Failed: %s(errno: %d)\n", strerror(errno), errno);
+        exit(0);
     }
 
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">tcphdr</span> *<span class="hljs-title">tcpHdr</span> = <span class="hljs-title">init_tcp_header</span>(10001);</span>
+    struct tcphdr *tcpHdr = init_tcp_header(10001);
 
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pseudohdr</span> *<span class="hljs-title">psdHdr</span> = (<span class="hljs-title">struct</span> <span class="hljs-title">pseudohdr</span> *) <span class="hljs-title">malloc</span>(<span class="hljs-title">sizeof</span>(<span class="hljs-title">struct</span> <span class="hljs-title">pseudohdr</span>));</span>
-    psdHdr-&gt;src_addr = inet_addr(<span class="hljs-string">"172.16.2.101"</span>);
-    psdHdr-&gt;dst_addr = inet_addr(<span class="hljs-string">"172.16.2.127"</span>);
-    psdHdr-&gt;zero = <span class="hljs-number">0</span>;
-    psdHdr-&gt;protocol = <span class="hljs-number">6</span>;
-    psdHdr-&gt;tcp_length = htons(<span class="hljs-keyword">sizeof</span>(struct tcphdr));
-    <span class="hljs-built_in">memcpy</span>(&amp;psdHdr-&gt;tcpHdr, tcpHdr, <span class="hljs-keyword">sizeof</span>(struct tcphdr));
-    tcpHdr-&gt;th_sum = htons(check_sum((<span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">short</span> *) psdHdr, <span class="hljs-keyword">sizeof</span>(struct pseudohdr)));
-    <span class="hljs-built_in">free</span>(psdHdr);
+    struct pseudohdr *psdHdr = (struct pseudohdr *) malloc(sizeof(struct pseudohdr));
+    psdHdr->src_addr = inet_addr("172.16.2.101");
+    psdHdr->dst_addr = inet_addr("172.16.2.127");
+    psdHdr->zero = 0;
+    psdHdr->protocol = 6;
+    psdHdr->tcp_length = htons(sizeof(struct tcphdr));
+    memcpy(&#x26;psdHdr->tcpHdr, tcpHdr, sizeof(struct tcphdr));
+    tcpHdr->th_sum = htons(check_sum((unsigned short *) psdHdr, sizeof(struct pseudohdr)));
+    free(psdHdr);
 
     tcp_syn(tcp_sock, tcpHdr);
-    <span class="hljs-built_in">free</span>(tcpHdr);
-}</code></pre><pre><code class="hljs">__                    __                  
+    free(tcpHdr);
+}
+</code></pre>
+<pre><code class="language-plain">  __                    __                  
  / _| __ _ _ __   __ _ / _| ___ _ __   __ _ 
 | |_ / _` | '_ \ / _` | |_ / _ \ '_ \ / _` |
 |  _| (_| | | | | (_| |  _|  __/ | | | (_| |
 |_|  \__,_|_| |_|\__, |_|  \___|_| |_|\__, |
-                 |___/                |___/</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"fullUrl":"/2018-09-18-TCP-SYN"},"buildId":"xx4WXnl7odya2QE7dUtyW","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>
+                 |___/                |___/ 
+</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"filePath":"2018-09-18-TCP-SYN"},"buildId":"PwcfeKg_ImLvxRNAh_q_5","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>

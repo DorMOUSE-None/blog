@@ -1,8 +1,5 @@
-<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fs8oc4ri7qj30mq055aap.jpg" alt="区块链简单结构">
-&lt;center&gt;&lt;small&gt;图1. 区块链简单结构&lt;/small&gt;&lt;/center&gt;</p>
+<!DOCTYPE html><html><head><meta charSet="utf-8" class="next-head"/><meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1" class="next-head"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/post.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/_app.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" as="script"/><link rel="preload" href="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" as="script"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/commons.a70990b9.chunk.css"/><link rel="stylesheet" href="https://www.ffutop.com/blog/_next/static/css/styles.196d8b6b.chunk.css"/></head><body><div id="__next"><header><h1 class="title">ffutop</h1><div><a href="/blog/blog/">博客</a><a href="/blog/archives/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></div></header><div><main class="main"><div><p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fs8oc4ri7qj30mq055aap.jpg" alt="区块链简单结构"></p>
 <p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1foxcpmmpfhj31kw107n2e.jpg" alt="Merkle tree"></p>
-<p>&lt;center&gt;&lt;small&gt;图2. 单个区块的抽象结构&lt;/small&gt;&lt;/center&gt;</p>
-<p>&lt;!-- more --&gt;</p>
 <h2>基本工作流程</h2>
 <h3>新交易发起流程</h3>
 <ol>
@@ -22,18 +19,14 @@
 <p>可能出现：</p>
 <ul>
 <li>女巫攻击——单一实体以多重身份重复对新区块结果进行表决（少数人抓住了网络的投票权）</li>
-<li><a href="https://zh.wikipedia.org/wiki/%E6%8B%9C%E5%8D%A0%E5%BA%AD%E5%B0%86%E5%86%9B%E9%97%AE%E9%A2%98">拜占庭将军问题</a>——分布式对等网络的通信容错问题
-<ul>
-<li>不同的计算机通过通讯交换信息达成共识而按照同一套协作策略行动
-<ul>
+<li><a href="https://zh.wikipedia.org/wiki/%E6%8B%9C%E5%8D%A0%E5%BA%AD%E5%B0%86%E5%86%9B%E9%97%AE%E9%A2%98">拜占庭将军问题</a>——分布式对等网络的通信容错问题<ul>
+<li>不同的计算机通过通讯交换信息达成共识而按照同一套协作策略行动<ul>
 <li>成员计算机可能出错而发送错误信息</li>
 <li>网络的不可靠性</li>
 <li>从而影响网络共识的达成，破坏一致性。</li>
-</ul>
-</li>
+</ul></li>
 <li>不解决的话可能导致——区块链分叉</li>
-</ul>
-</li>
+</ul></li>
 </ul>
 <p>解决方案：</p>
 <ul>
@@ -58,7 +51,7 @@
 |   CNY   |  红薯  |  0  |
 -------------------------
 </code></pre>
-<p>防风 向 红薯 转账 2 CNY</p>
+<p>防风 向 红薯 转账 2 CNY </p>
 <pre><code>-------------------------
 | 资产类型 | 所有者 | 数量 |
 -------------------------
@@ -92,7 +85,7 @@
 <li>定位防风所有的资产记录行</li>
 <li>删除该行前验证密钥</li>
 <li>确认该记录没有被别的交易使用（双花问题，双重交易）</li>
-<li>写入新的正确的记录（红薯获得的资产 &amp; 防风剩余的资产），确保交易前与交易后资产总额不变</li>
+<li>写入新的正确的记录（红薯获得的资产 &#x26; 防风剩余的资产），确保交易前与交易后资产总额不变</li>
 </ol>
 <p>上面的模型 —— 基于比特币的交易模型(UTXO <em>model</em>)</p>
 <p><strong>适合于数字标记资产的传输与追踪</strong></p>
@@ -101,14 +94,12 @@
 </ul>
 <p>---------------------------------</p>
 <p>另一种模型常用于智能合约 —— 基于账号的模型(account-based <em>model</em>)</p>
-<p><strong>提供了建立多步骤执行的基本机制</strong></p>
+<p><strong>提供了建立多步骤执行的基本机制</strong> </p>
 <h3>资产如何产生</h3>
 <ul>
-<li>比特币：
-<ul>
+<li>比特币：<ul>
 <li>矿工节点允许在挖出的新节点中加入一种 coinbase 类型的交易（不存在交易输入，新资产数额有比特币链提前定义）</li>
-</ul>
-</li>
+</ul></li>
 <li>在创始新代币的时候全额发行</li>
 <li>其它机制</li>
 </ul>
@@ -130,14 +121,14 @@
 (2) “交易”——“交易”功能允许任何人向合约发送5单位Y，并从合约持有的X中返回1单位给交易方；
 (3) “撤销”——“撤销”功能允许 防风 取出合约中存有的所有资产。
 
-	请注意，上述“存款”和“撤销”功能被限制为只允许被 防风（实际上是防风的私钥）调用。当然，这只有由于上述合约由防风制定。若人为的制定一个所有人都能调用任何功能的合约也是允许的（虽然这在事实上没有意义）。
-
+    请注意，上述“存款”和“撤销”功能被限制为只允许被 防风（实际上是防风的私钥）调用。当然，这只有由于上述合约由防风制定。若人为的制定一个所有人都能调用任何功能的合约也是允许的（虽然这在事实上没有意义）。
 </code></pre>
 <p>那么在基于账户的模型下，可以认为 拥有“存储”、“交易”、“撤销”方法的合约持有一个单独的账户（与用户所持有的账户等价）。</p>
 <p>在上述合约下，这个账户将可能持有一定数量的资产。除了只能按照预定的合约步骤对资产进行处置之外，其它与用户持有的账户别无二致。</p>
-<pre><code class="hljs">__                    __
+<pre><code class="language-text">  __                    __
  / _| __ _ _ __   __ _ / _| ___ _ __   __ _
 | |_ / _` | '_ \ / _` | |_ / _ \ '_ \ / _` |
 |  _| (_| | | | | (_| |  _|  __/ | | | (_| |
 |_|  \__,_|_| |_|\__, |_|  \___|_| |_|\__, |
-                 |___/                |___/</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"fullUrl":"/2018-03-01-区块链简单介绍"},"buildId":"xx4WXnl7odya2QE7dUtyW","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/xx4WXnl7odya2QE7dUtyW/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>
+                 |___/                |___/
+</code></pre></div></main><footer class="footer">ffutop © <!-- -->2019<!-- -->, Built with<a href="https://reactjs.org/">React</a></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"dataManager":"[]","props":{"pageProps":{}},"page":"/post","query":{"filePath":"2018-03-01-区块链简单介绍"},"buildId":"PwcfeKg_ImLvxRNAh_q_5","dynamicBuildId":false,"assetPrefix":"https://www.ffutop.com/blog","nextExport":true}</script><script async="" id="__NEXT_PAGE__/post" src="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/post.js"></script><script async="" id="__NEXT_PAGE__/_app" src="https://www.ffutop.com/blog/_next/static/PwcfeKg_ImLvxRNAh_q_5/pages/_app.js"></script><script src="https://www.ffutop.com/blog/_next/static/runtime/webpack-8ed9452df514b4d17d80.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/commons.966200943f7869d2249d.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/chunks/styles.2d2aeb3a0a1eb931bc6e.js" async=""></script><script src="https://www.ffutop.com/blog/_next/static/runtime/main-3daabeb1dde7624c7fe0.js" async=""></script></body></html>
