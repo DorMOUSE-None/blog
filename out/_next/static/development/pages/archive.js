@@ -9766,17 +9766,16 @@ var _jsxFileName = "/Users/fangfeng/MISC/blog/ffutop/pages/archive.js";
 
 var Archive = function Archive(props) {
   var archives = props.router.query.archives;
-  console.log(archives);
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(src_components_MainContainer__WEBPACK_IMPORTED_MODULE_3__["default"], {
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 12
+      lineNumber: 11
     },
     __self: this
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("ul", {
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 13
+      lineNumber: 12
     },
     __self: this
   }, archives && archives.map(function (archive) {
@@ -9784,7 +9783,7 @@ var Archive = function Archive(props) {
       key: archive.title,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 16
+        lineNumber: 15
       },
       __self: this
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(next_link__WEBPACK_IMPORTED_MODULE_1___default.a, {
@@ -9792,13 +9791,13 @@ var Archive = function Archive(props) {
       as: "" + "/" + archive.url,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 17
+        lineNumber: 16
       },
       __self: this
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 20
+        lineNumber: 19
       },
       __self: this
     }, archive.title)));
@@ -9852,22 +9851,15 @@ var Header = function Header(props) {
     },
     __self: this
   }, _routers_js__WEBPACK_IMPORTED_MODULE_2__["routers"].map(function (router) {
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(next_link__WEBPACK_IMPORTED_MODULE_1___default.a, {
-      href: router.path,
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
       key: router.name,
-      as: "" + router.path,
+      href: "" + router.path,
       __source: {
         fileName: _jsxFileName,
         lineNumber: 13
       },
       __self: this
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 17
-      },
-      __self: this
-    }, router.title));
+    }, router.title);
   })));
 };
 
@@ -9972,7 +9964,7 @@ MainContainer.propTypes = {
 
 /***/ }),
 
-/***/ 4:
+/***/ 0:
 /*!***************************************************************************************************************************************!*\
   !*** multi next-client-pages-loader?page=%2Farchive&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Farchive.js ***!
   \***************************************************************************************************************************************/
@@ -9995,5 +9987,5 @@ module.exports = dll_afa7b25a60452594c240;
 
 /***/ })
 
-},[[4,"static/runtime/webpack.js","styles"]]]);
+},[[0,"static/runtime/webpack.js","styles"]]]);
 //# sourceMappingURL=archive.js.map
