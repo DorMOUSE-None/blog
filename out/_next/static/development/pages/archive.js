@@ -1,4 +1,4 @@
-(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["static/development/pages/index.js"],{
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["static/development/pages/archive.js"],{
 
 /***/ "./node_modules/@babel/runtime-corejs2/core-js/array/is-array.js":
 /*!***********************************************************************!*\
@@ -5378,21 +5378,21 @@ exports.formatWithValidation = formatWithValidation;
 
 /***/ }),
 
-/***/ "./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?page=%2F&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Findex.js!./":
-/*!**************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?page=%2F&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Findex.js ***!
-  \**************************************************************************************************************************************************************************/
+/***/ "./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?page=%2Farchive&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Farchive.js!./":
+/*!***********************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?page=%2Farchive&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Farchive.js ***!
+  \***********************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-    (window.__NEXT_P=window.__NEXT_P||[]).push(["/", function() {
-      var page = __webpack_require__(/*! ./pages/index.js */ "./pages/index.js")
+    (window.__NEXT_P=window.__NEXT_P||[]).push(["/archive", function() {
+      var page = __webpack_require__(/*! ./pages/archive.js */ "./pages/archive.js")
       if(true) {
-        module.hot.accept(/*! ./pages/index.js */ "./pages/index.js", function() {
-          if(!next.router.components["/"]) return
-          var updatedPage = __webpack_require__(/*! ./pages/index.js */ "./pages/index.js")
-          next.router.update("/", updatedPage.default || updatedPage)
+        module.hot.accept(/*! ./pages/archive.js */ "./pages/archive.js", function() {
+          if(!next.router.components["/archive"]) return
+          var updatedPage = __webpack_require__(/*! ./pages/archive.js */ "./pages/archive.js")
+          next.router.update("/archive", updatedPage.default || updatedPage)
         })
       }
       return { page: page.default || page }
@@ -9742,10 +9742,10 @@ module.exports = function(module) {
 
 /***/ }),
 
-/***/ "./pages/index.js":
-/*!************************!*\
-  !*** ./pages/index.js ***!
-  \************************/
+/***/ "./pages/archive.js":
+/*!**************************!*\
+  !*** ./pages/archive.js ***!
+  \**************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -9753,28 +9753,59 @@ module.exports = function(module) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! next/router */ "./node_modules/next/dist/client/router.js");
-/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var src_components_MainContainer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! src/components/MainContainer */ "./src/components/MainContainer/index.js");
-/* harmony import */ var src_components_PostDigest__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! src/components/PostDigest */ "./src/components/PostDigest/index.js");
-var _jsxFileName = "/Users/fangfeng/MISC/blog/ffutop/pages/index.js";
+/* harmony import */ var next_link__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! next/link */ "./node_modules/next/link.js");
+/* harmony import */ var next_link__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(next_link__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! next/router */ "./node_modules/next/dist/client/router.js");
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var src_components_MainContainer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! src/components/MainContainer */ "./src/components/MainContainer/index.js");
+var _jsxFileName = "/Users/fangfeng/MISC/blog/ffutop/pages/archive.js";
 
 
 
 
 
-var Index = function Index(props) {
-  var posts = props.router.query.posts;
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(src_components_MainContainer__WEBPACK_IMPORTED_MODULE_2__["default"], {
+var Archive = function Archive(props) {
+  var archives = props.router.query.archives;
+  console.log(archives);
+  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(src_components_MainContainer__WEBPACK_IMPORTED_MODULE_3__["default"], {
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 10
+      lineNumber: 12
     },
     __self: this
-  }, "ffutop's blog");
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("ul", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 13
+    },
+    __self: this
+  }, archives && archives.map(function (archive) {
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("li", {
+      key: archive.title,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 16
+      },
+      __self: this
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(next_link__WEBPACK_IMPORTED_MODULE_1___default.a, {
+      href: archive.url,
+      as: "" + "/" + archive.url,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 17
+      },
+      __self: this
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 20
+      },
+      __self: this
+    }, archive.title)));
+  })));
 };
 
-/* harmony default export */ __webpack_exports__["default"] = (Object(next_router__WEBPACK_IMPORTED_MODULE_1__["withRouter"])(Index));
+/* harmony default export */ __webpack_exports__["default"] = (Object(next_router__WEBPACK_IMPORTED_MODULE_2__["withRouter"])(Archive));
 
 /***/ }),
 
@@ -9941,42 +9972,14 @@ MainContainer.propTypes = {
 
 /***/ }),
 
-/***/ "./src/components/PostDigest/index.js":
-/*!********************************************!*\
-  !*** ./src/components/PostDigest/index.js ***!
-  \********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-var _jsxFileName = "/Users/fangfeng/MISC/blog/ffutop/src/components/PostDigest/index.js";
-
-
-var PostDigest = function PostDigest(props) {
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 5
-    },
-    __self: this
-  }, "AAAA");
-};
-
-/* harmony default export */ __webpack_exports__["default"] = (PostDigest);
-
-/***/ }),
-
-/***/ 0:
-/*!******************************************************************************************************************************!*\
-  !*** multi next-client-pages-loader?page=%2F&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Findex.js ***!
-  \******************************************************************************************************************************/
+/***/ 4:
+/*!***************************************************************************************************************************************!*\
+  !*** multi next-client-pages-loader?page=%2Farchive&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Farchive.js ***!
+  \***************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! next-client-pages-loader?page=%2F&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Findex.js! */"./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?page=%2F&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Findex.js!./");
+module.exports = __webpack_require__(/*! next-client-pages-loader?page=%2Farchive&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Farchive.js! */"./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?page=%2Farchive&absolutePagePath=%2FUsers%2Ffangfeng%2FMISC%2Fblog%2Fffutop%2Fpages%2Farchive.js!./");
 
 
 /***/ }),
@@ -9992,5 +9995,5 @@ module.exports = dll_afa7b25a60452594c240;
 
 /***/ })
 
-},[[0,"static/runtime/webpack.js","styles"]]]);
-//# sourceMappingURL=index.js.map
+},[[4,"static/runtime/webpack.js","styles"]]]);
+//# sourceMappingURL=archive.js.map
