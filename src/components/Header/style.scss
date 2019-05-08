@@ -1,0 +1,33 @@
+header { 
+  display: flex;
+  max-width: 48rem;
+  margin: 0 auto;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header a {
+  color: #2f3542;
+  text-decoration: none;
+}
+
+header a:after {
+  border: 0 solid #7bed9f;
+  transition: all 1s;
+  content: '';
+  position: absolute;
+  top: -0.1rem;
+  border-bottom: 0;
+}
+
+header a:hover:after {
+  border-bottom: 1rem;
+}
+
+.title {
+  font-family: "Chancery", cursive, sans-serif;
+}
+
+.link {
+  margin: 0 0.4rem;
+}

@@ -1,12 +1,19 @@
-import Link from 'next/link';
+import {withRouter} from 'next/router';
 
-const Index = () => (
-  <div>
-    <p>ffutop's blog</p>
-    <Link href="/about">
-      About Me
-    </Link>
-  </div>
-)
+import MainContainer from 'src/components/MainContainer';
+import PostDigest from 'src/components/PostDigest';
 
-export default Index;
+const Index = props => {
+  const posts = props.router.query.posts;
+
+  return (
+    <MainContainer>
+      {/*posts.map(post => {
+        return <PostDigest post={post} />;
+      })*/}
+      ffutop's blog
+    </MainContainer>
+  );
+};
+
+export default withRouter(Index);
