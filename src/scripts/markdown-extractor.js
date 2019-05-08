@@ -8,9 +8,15 @@ const toc = require('remark-toc');
 const remark2rehype = require('remark-rehype');
 const stringify = require('rehype-stringify');
 
-convertor = dirName => {
+const extractor = require('./extractor.js');
+
+const markdownExtractor = dirName => {
+  if (dirName == null) {
+    console.log('markdown-extractor need variable [dirName]');
+    return;
+  }
   const markdownFiles = fs.readdirSync(dirName);
-  const mdsMap = {};
+  const markdowns = [];
 
   for (let i = 0, length = markdownFiles.length; i < length; i++) {
     const fileName = dirName + markdownFiles[i];
@@ -19,12 +25,23 @@ convertor = dirName => {
     const raw = fs.readFileSync(fileName, {
       encoding: 'UTF-8',
     });
-    //mdsMap[markdownFiles[i]] = extract(raw);
-    fs.writeFileSync(
-      fileName.replace(/.md$/, '.json'),
-      JSON.stringify(extract(raw)),
-    );
+    const vf = extract(raw);
+    const markdown = {
+      fileName: markdownFiles[i],
+      title: markdownFiles[i].replace(/.md$/, ''),
+      url: markdownFiles[i].replace(/.md$/, ''),
+      content: vf.contents,
+      // TODO: 
+      // 1. math support
+      // 2. content digest
+      // 3. yaml parse
+      //  - tags
+      //  - post date
+      //  - author
+    };
+    markdowns.push(markdown);
   }
+  return markdowns;
 };
 
 const extract = raw => {
@@ -32,12 +49,10 @@ const extract = raw => {
     .use(parse)
     .use(toc, {maxDepth: 3})
     .use(frontmatter, ['yaml'])
+    .use(extractor)
     .use(remark2rehype)
     .use(stringify);
   return processor.processSync(raw);
 };
 
-module.exports = {
-  convertor: convertor,
-};
-convertor('./content/');
+module.exports = markdownExtractor;

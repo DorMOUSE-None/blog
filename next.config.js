@@ -1,7 +1,7 @@
 // next.config.js
 const withSass = require('@zeit/next-sass');
 const fs = require('fs');
-const mds2html = require('src/scripts/markdowns-to-html.js');
+const extractor = require('src/scripts/markdown-extractor.js');
 
 const prod = process.env.NODE_ENV === 'production';
 
@@ -15,18 +15,17 @@ module.exports = withSass({
     const posts = {};
     const archives = [];
 
-    const files = fs.readdirSync(contentDir);
-    for (let i = 0, length = files.length; i < length; i++) {
-      if (!files[i].endsWith('.json')) continue;
-      const rawName = files[i].replace(/.json$/, '');
+    const markdowns = extractor(contentDir);
+    for (let i = 0, length = markdowns.length; i < length; i++) {
+      const markdown = markdowns[i];
       archives.push({
-        title: rawName,
-        url: rawName,
+        title: markdown.title,
+        url: markdown.url,
       });
-      posts[rawName] = {
+      posts[markdown.url] = {
         page: '/post',
         query: {
-          filePath: rawName,
+          content: markdown.content,
         },
       };
     }

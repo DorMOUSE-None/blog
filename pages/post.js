@@ -3,11 +3,11 @@ import {withRouter} from 'next/router';
 import MainContainer from 'src/components/MainContainer';
 
 const Post = props => {
-  const jsonData = require('content/' + props.router.query.filePath + '.json');
+  const content = props.router.query.content;
   return (
     <MainContainer>
       <div className="page-post">
-        <div dangerouslySetInnerHTML={{__html: jsonData.contents}} />
+        <div dangerouslySetInnerHTML={{__html: content}} />
       </div>
     </MainContainer>
   );

@@ -33,6 +33,7 @@
     "remark-toc": "^5.1.1",
     "to-vfile": "^5.0.2",
     "unified": "^7.1.0",
+    "unist-util-visit": "^1.4.0",
     "vfile-reporter": "^5.1.1"
   }
 }
