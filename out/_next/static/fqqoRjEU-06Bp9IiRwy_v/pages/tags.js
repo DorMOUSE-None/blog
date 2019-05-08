@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([["c28f"],{LwLK:function(n,t,a){"use strict";a.r(t);var o=a("q1tI"),w=a.n(o),e=a("0o6o");t.default=function(n){w.a.createElement(e.a,null)}},tNhp:function(n,t,a){(window.__NEXT_P=window.__NEXT_P||[]).push(["/tags",function(){var n=a("LwLK");return{page:n.default||n}}])}},[["tNhp","5d41","9da1","ad9d"]]]);
