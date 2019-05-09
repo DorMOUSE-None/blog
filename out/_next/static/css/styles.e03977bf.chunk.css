@@ -1,0 +1,507 @@
+.page-about {
+  font-size: 20px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center; }
+  .page-about .about-style * {
+    font-family: 'Noto Serif SC', serif; }
+  .page-about .about-img {
+    display: inline-block;
+    max-width: 20%; }
+  .page-about .about-intro {
+    display: inline-block;
+    margin-left: 2%;
+    width: 73%;
+    vertical-align: top; }
+  .page-about .about-intro h1 {
+    font-size: 2.25rem;
+    margin-top: 0;
+    margin-bottom: 0.9375rem; }
+  .page-about .about-intro ul {
+    padding: 0; }
+  .page-about .about-intro .about-tag li {
+    display: inline-block;
+    border: 2px solid #545b62;
+    border-radius: 5px;
+    background: #545b62;
+    padding: 2px 10px;
+    margin-right: 10px;
+    color: #ffffff;
+    font-weight: 700; }
+  .page-about .about-skill h2 {
+    text-decoration: underline double black; }
+  .page-about .about-skill li {
+    display: inline-block;
+    border: solid 2px #545b62;
+    padding: 2px 10px;
+    font-weight: 700; }
+  .page-about .about-contact {
+    position: relative;
+    margin-top: 2.5rem;
+    border-top: #ebf2f6 2px solid;
+    padding-bottom: 2rem;
+    border-bottom: #ebf2f6 2px solid;
+    margin-bottom: 2.5rem; }
+  .page-about .about-icon {
+    position: relative;
+    width: 5rem;
+    border-radius: 50%;
+    border: 2px double #545b62;
+    margin: 0 auto;
+    top: -2.5rem;
+    background: #ffffff; }
+  .page-about .about-icon img {
+    width: 5rem; }
+  .page-about .about-contact ul {
+    padding: 0;
+    margin: 0.25rem auto;
+    text-align: center; }
+  .page-about .about-contact li {
+    display: inline-block;
+    padding: 0 0.5rem; }
+
+@charset "UTF-8";
+.post-page {
+  /* 防止用户自定义背景颜色对网页的影响，添加让用户可以自定义字体 */
+  /* 如果你的项目仅支持 IE9+ | Chrome | Firefox 等，推荐在 <html> 中添加 .borderbox 这个 class */
+  /* 内外边距通常让各个浏览器样式的表现位置不同 */
+  /* 重设 HTML5 标签, IE 需要在 js 中 createElement(TAG) */
+  /* HTML5 媒体文件跟 img 保持一致 */
+  /* 要注意表单元素并不继承父级 font 的问题 */
+  /* 去掉各Table cell 的边距并让其边重合 */
+  /* 去除默认边框 */
+  /* 块/段落引用 */
+  /* Firefox 以外，元素没有下划线，需添加 */
+  /* 添加鼠标问号，进一步确保应用的语义是正确的（要知道，交互他们也有洁癖，如果你不去掉，那得多花点口舌） */
+  /* 去掉列表前的标识, li 会继承，大部分网站通常用列表来很多内容，所以应该当去 */
+  /* 对齐是排版最重要的因素, 别让什么都居中 */
+  /* 统一上标和下标 */
+  /* 让链接在 hover 状态下显示下划线 */
+  /* 默认不显示下划线，保持页面简洁 */
+  /* 标记，类似于手写的荧光笔的作用 */
+  /* 代码片断 */
+  /* 一致化 horizontal rule */
+  /* 保证块/段落之间的空白隔行 */
+  /* 标题应该更贴紧内容，并与其他块区分，margin 值要相应做优化 */
+  /* 在文章中，应该还原 ul 和 ol 的样式 */
+  /* Responsive images */ }
+  .post-page :root {
+    --active-file-bg-color: #dadada;
+    --active-file-bg-color: rgba(32, 43, 51, 0.63);
+    --active-file-text-color: white;
+    --bg-color: #fff;
+    --text-color: #333;
+    --side-bar-bg-color: #f5f5f5;
+    --control-text-color: #666; }
+  .post-page html {
+    color: #333;
+    background: #fff;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-rendering: optimizelegibility;
+    font-size: 14px;
+    -webkit-font-smoothing: initial; }
+  .post-page #write {
+    max-width: 960px;
+    padding-top: 2em;
+    padding-left: 60px;
+    padding-right: 60px;
+    min-height: calc(100vh - 6em);
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px; }
+  .post-page .typora-node #write {
+    min-height: calc(100% - 6em); }
+  .post-page pre.md-meta-block {
+    background: #f5f5f5;
+    padding: 1em;
+    border-radius: 3px;
+    font-size: 14px; }
+  @media screen and (max-width: 800px) {
+    .post-page html {
+      font-size: 14px; }
+    .post-page #write {
+      padding-left: 30px;
+      padding-right: 30px;
+      font-size: 14px; } }
+  @media screen and (min-width: 1100px) {
+    .post-page body,
+    .post-page #footer-word-count-info {
+      background: #f5f5f5; }
+    .post-page body.pin-outline,
+    .post-page .pin-outline #footer-word-count-info,
+    .post-page .pin-outline footer {
+      background: #fff; }
+    .post-page #write {
+      max-width: 1000px;
+      padding: 40px 60px;
+      background: #fff;
+      margin: 3em auto 3em;
+      border: 1px solid #ddd;
+      border-width: 0 1px; }
+    .post-page .pin-outline #write {
+      max-width: 1000px;
+      background: #fff;
+      margin: 0 0 0;
+      border: 0;
+      padding-left: 60px;
+      padding-right: 60px; }
+    .post-page footer {
+      background-color: transparent; } }
+  @media screen and (min-width: 1300px) {
+    .post-page body.pin-outline,
+    .post-page .pin-outline #footer-word-count-info,
+    .post-page .pin-outline footer {
+      background: #f5f5f5; }
+    .post-page .pin-outline #write {
+      max-width: 1000px;
+      padding: 40px 60px;
+      background: #fff;
+      margin: 3em auto 3em;
+      border: 1px solid #ddd;
+      border-width: 0 1px; }
+    .post-page .pin-outline footer {
+      background-color: transparent; }
+    .post-page #footer-word-count-info {
+      background: #f5f5f5; } }
+  .post-page html.borderbox *,
+  .post-page html.borderbox *:before,
+  .post-page html.borderbox *:after {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box; }
+  .post-page body,
+  .post-page dl,
+  .post-page dt,
+  .post-page dd,
+  .post-page ul,
+  .post-page ol,
+  .post-page li,
+  .post-page h1,
+  .post-page h2,
+  .post-page h3,
+  .post-page h4,
+  .post-page h5,
+  .post-page h6,
+  .post-page code,
+  .post-page form,
+  .post-page fieldset,
+  .post-page legend,
+  .post-page input,
+  .post-page textarea,
+  .post-page p,
+  .post-page blockquote,
+  .post-page th,
+  .post-page td,
+  .post-page hr,
+  .post-page button,
+  .post-page article,
+  .post-page aside,
+  .post-page details,
+  .post-page figcaption,
+  .post-page figure,
+  .post-page footer,
+  .post-page header,
+  .post-page menu,
+  .post-page nav,
+  .post-page section {
+    margin: 0;
+    padding: 0; }
+  .post-page article,
+  .post-page aside,
+  .post-page details,
+  .post-page figcaption,
+  .post-page figure,
+  .post-page footer,
+  .post-page header,
+  .post-page menu,
+  .post-page nav,
+  .post-page section {
+    display: block; }
+  .post-page audio,
+  .post-page canvas,
+  .post-page video {
+    display: inline-block; }
+  .post-page body,
+  .post-page button,
+  .post-page input,
+  .post-page select,
+  .post-page textarea {
+    font: 300 1em/1.8 'PingFang SC', 'Lantinghei SC', 'Microsoft Yahei', 'Hiragino Sans GB', 'Microsoft Sans Serif', 'WenQuanYi Micro Hei', sans; }
+  .post-page body {
+    font-family: 'PingFang SC', 'Lantinghei SC', 'Microsoft Yahei', 'Hiragino Sans GB', 'Microsoft Sans Serif', 'WenQuanYi Micro Hei', sans; }
+  .post-page h1,
+  .post-page h2,
+  .post-page h3,
+  .post-page h4,
+  .post-page h5,
+  .post-page h6 {
+    font-family: 'TimesNewRomanPS-ItalicMT', 'PingFang SC', 'Lantinghei SC', 'Microsoft Yahei', 'Hiragino Sans GB', 'Microsoft Sans Serif', 'WenQuanYi Micro Hei', sans;
+    /*font-family: "PingFang SC", "Lantinghei SC", "Microsoft Yahei", "Hiragino Sans GB", "Microsoft Sans Serif", "WenQuanYi Micro Hei", sans;*/
+    -webkit-font-smoothing: initial;
+    font-weight: 100;
+    color: var(--text-color);
+    line-height: 1.35;
+    font-variant-numeric: lining-nums;
+    margin-bottom: 1em; }
+  .post-page em {
+    font-family: Georgia-Italic, STSongti-SC-Light, serif; }
+  .post-page strong em,
+  .post-page em strong {
+    font-family: Georgia-BoldItalic, STSongti-SC-Regular, serif; }
+  .post-page button::-moz-focus-inner,
+  .post-page input::-moz-focus-inner {
+    padding: 0;
+    border: 0; }
+  .post-page table {
+    border-collapse: collapse;
+    border-spacing: 0; }
+  .post-page fieldset,
+  .post-page img {
+    border: 0; }
+  .post-page blockquote {
+    position: relative;
+    color: #999;
+    font-weight: 400;
+    border-left: 1px solid #1abc9c;
+    padding-left: 1em;
+    margin: 1em 3em 1em 2em; }
+  @media only screen and (max-width: 640px) {
+    .post-page blockquote {
+      margin: 1em 0; } }
+  .post-page acronym,
+  .post-page abbr {
+    border-bottom: 1px dotted;
+    font-variant: normal; }
+  .post-page abbr {
+    cursor: help; }
+  .post-page address,
+  .post-page caption,
+  .post-page cite,
+  .post-page code,
+  .post-page dfn,
+  .post-page th,
+  .post-page var {
+    font-style: normal;
+    font-weight: 400; }
+  .post-page ul,
+  .post-page ol {
+    list-style: none; }
+  .post-page caption,
+  .post-page th {
+    text-align: left; }
+  .post-page q:before,
+  .post-page q:after {
+    content: ''; }
+  .post-page sub,
+  .post-page sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative; }
+  .post-page :root sub,
+  .post-page :root sup {
+    vertical-align: baseline;
+    /* for ie9 and other modern browsers */ }
+  .post-page sup {
+    top: -0.5em; }
+  .post-page sub {
+    bottom: -0.25em; }
+  .post-page a {
+    color: #1abc9c; }
+  .post-page a:hover {
+    text-decoration: underline; }
+  .post-page #write a {
+    border-bottom: 1px solid #1abc9c; }
+  .post-page #write a:hover {
+    border-bottom-color: #555;
+    color: #555;
+    text-decoration: none; }
+  .post-page ins,
+  .post-page a {
+    text-decoration: none; }
+  .post-page mark {
+    background: #fffdd1;
+    border-bottom: 1px solid #ffedce;
+    padding: 2px;
+    margin: 0 5px; }
+  .post-page pre,
+  .post-page code,
+  .post-page pre tt {
+    font-family: Courier, 'Courier New', monospace; }
+  .post-page #write .md-fences {
+    border: 1px solid #ddd;
+    padding: 1em 0.5em;
+    display: block;
+    -webkit-overflow-scrolling: touch; }
+  .post-page hr {
+    border: none;
+    border-bottom: 1px solid #cfcfcf;
+    margin-bottom: 0.8em;
+    height: 10px; }
+  .post-page #write strong {
+    font-weight: bolder;
+    color: #000; }
+  .post-page .code-tooltip.md-hover-tip strong {
+    color: white; }
+  .post-page #write p,
+  .post-page #write .md-fences,
+  .post-page #write ul,
+  .post-page #write ol,
+  .post-page #write dl,
+  .post-page #write form,
+  .post-page #write hr,
+  .post-page #write figure,
+  .post-page #write-p,
+  .post-page #write-pre,
+  .post-page #write-ul,
+  .post-page #write-ol,
+  .post-page #write-dl,
+  .post-page #write-form,
+  .post-page #write-hr,
+  .post-page #write-table,
+  .post-page blockquote {
+    margin-bottom: 1.2em; }
+  .post-page html {
+    font-family: PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif; }
+  .post-page #write h1,
+  .post-page #write h2,
+  .post-page #write h3,
+  .post-page #write h4,
+  .post-page #write h5,
+  .post-page #write h6,
+  .post-page #write-h1,
+  .post-page #write-h2,
+  .post-page #write-h3,
+  .post-page #write-h4,
+  .post-page #write-h5,
+  .post-page #write-h6 {
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    line-height: 1.35;
+    color: #000; }
+  .post-page #write h1,
+  .post-page #write-h1 {
+    font-size: 2.4em;
+    padding-bottom: 1em;
+    border-bottom: 3px double #eee; }
+  .post-page #write h2,
+  .post-page #write-h2 {
+    font-size: 1.8em; }
+  .post-page #write h3,
+  .post-page #write-h3 {
+    font-size: 1.6em; }
+  .post-page #write h4,
+  .post-page #write-h4 {
+    font-size: 1.4em; }
+  .post-page #write h5,
+  .post-page #write h6,
+  .post-page #write-h5,
+  .post-page #write-h6 {
+    font-size: 1.2em; }
+  .post-page #write ul,
+  .post-page #write-ul {
+    margin-left: 1.3em;
+    list-style: disc; }
+  .post-page #write ol,
+  .post-page #write-ol {
+    list-style: decimal;
+    margin-left: 1.9em; }
+  .post-page #write li ul,
+  .post-page #write li ol,
+  .post-page #write-ul ul,
+  .post-page #write-ul ol,
+  .post-page #write-ol ul,
+  .post-page #write-ol ol {
+    margin-bottom: 0.8em;
+    margin-left: 2em; }
+  .post-page #write li ul,
+  .post-page #write-ul ul,
+  .post-page #write-ol ul {
+    list-style: circle; }
+  .post-page #write table th,
+  .post-page #write table td {
+    border: 1px solid #ddd;
+    padding: 0.5em 1em;
+    color: #666; }
+  .post-page #write table .md-table-edit th {
+    border: none;
+    padding: 0;
+    color: inherit; }
+  .post-page #write table th,
+  .post-page #write-table th {
+    background: #fbfbfb; }
+  .post-page #write table thead th,
+  .post-page #write-table thead th {
+    background: #f1f1f1; }
+  .post-page #write table caption {
+    border-bottom: none; }
+  .post-page #write em {
+    font-weight: inherit;
+    font-style: inherit; }
+  .post-page li > p {
+    margin-bottom: 0 !important; }
+  .post-page #write img {
+    max-width: 100%; }
+  .post-page a.md-toc-inner {
+    border-bottom: 0 !important; }
+  .post-page .md-toc-h1:first-of-type:last-of-type {
+    display: none; }
+  .post-page .md-toc {
+    font-size: inherit; }
+  .post-page .md-toc-h1 .md-toc-inner {
+    font-weight: normal; }
+  .post-page .md-table-edit th {
+    padding: 0 !important;
+    border: 0 !important; }
+  .post-page .mac-seamless-mode #write {
+    min-height: calc(100vh - 6em - 20px); }
+  .post-page .typora-quick-open-item.active {
+    color: var(--active-file-text-color); }
+  .post-page *.in-text-selection,
+  .post-page ::selection {
+    background: var(--active-file-bg-color);
+    text-shadow: none;
+    color: white; }
+  .post-page .btn-primary {
+    background-color: #2d2d2d;
+    border-color: #020202; }
+  .post-page .btn-primary:hover,
+  .post-page .btn-primary:focus,
+  .post-page .btn-primary.focus,
+  .post-page .btn-primary:active,
+  .post-page .btn-primary.active,
+  .post-page .open > .dropdown-toggle.btn-primary {
+    background-color: #4e4c4e;
+    border: #4e4c4e; }
+  .post-page #preference-dialog .modal-content {
+    background: #6e757a;
+    --bg-color: #6e757a;
+    --text-color: #f1f1f1;
+    color: #f1f1f1; }
+  .post-page #typora-source,
+  .post-page .typora-sourceview-on {
+    --bg-color: #eee;
+    background: #eee; }
+  .post-page .cm-s-typora-default .cm-header,
+  .post-page .cm-s-typora-default .cm-property {
+    color: #116098; }
+  .post-page .cm-s-typora-default .cm-link {
+    color: #11987d; }
+  .post-page .cm-s-typora-default .cm-em {
+    font-family: Georgia-Italic, STSongti-SC-Light, serif;
+    color: #6f6400; }
+  .post-page .cm-s-typora-default .cm-em {
+    color: #00162d; }
+  .post-page .CodeMirror.cm-s-typora-default div.CodeMirror-cursor {
+    border-left: 3px solid #6e757a; }
+  .post-page .cm-s-typora-default .CodeMirror-selectedtext,
+  .post-page .typora-sourceview-on .CodeMirror-focused .CodeMirror-selected {
+    background: #6e757a;
+    color: white; }
+  .post-page .file-node-icon.fa.fa-folder:before {
+    color: rgba(32, 43, 51, 0.49); }
+  .post-page #preference-dialog .megamenu-menu-panel h1 {
+    margin-bottom: 1em; }
+  .post-page ::-webkit-scrollbar-corner {
+    display: none;
+    background: transparent; }
+
