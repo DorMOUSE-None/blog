@@ -5,7 +5,9 @@ const vfile = require('to-vfile');
 const report = require('vfile-reporter');
 const frontmatter = require('remark-frontmatter');
 const toc = require('remark-toc');
+const math = require('remark-math');
 const remark2rehype = require('remark-rehype');
+const katex = require('rehype-katex');
 const stringify = require('rehype-stringify');
 
 const extractor = require('./extractor.js');
@@ -31,7 +33,7 @@ const markdownExtractor = dirName => {
       title: markdownFiles[i].replace(/.md$/, ''),
       url: markdownFiles[i].replace(/.md$/, ''),
       content: vf.contents,
-      // TODO: 
+      // TODO:
       // 1. math support
       // 2. content digest
       // 3. yaml parse
@@ -49,8 +51,12 @@ const extract = raw => {
     .use(parse)
     .use(toc, {maxDepth: 3})
     .use(frontmatter, ['yaml'])
+    .use(math)
     .use(extractor)
     .use(remark2rehype)
+    .use(katex, {
+      inlineDoubleDisplay: false,
+    })
     .use(stringify);
   return processor.processSync(raw);
 };

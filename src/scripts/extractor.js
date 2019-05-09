@@ -9,7 +9,6 @@ function extractor() {
     visit(tree, visitor);
 
     function visitor(node, index, parent) {
-
     }
   }
 }
