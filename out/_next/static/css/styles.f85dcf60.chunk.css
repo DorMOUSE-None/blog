@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .page-about {
   font-size: 20px;
   margin: 0 auto;
@@ -59,6 +60,20 @@
   .page-about .about-contact li {
     display: inline-block;
     padding: 0 0.5rem; }
+
+.page-archives {
+  display: flex; }
+  .page-archives ul {
+    display: flex;
+    flex-direction: column; }
+    .page-archives ul li {
+      list-style: '\1F680   ' outside; }
+    .page-archives ul span.date {
+      margin: 0 1rem 0 0;
+      color: #57606f; }
+    .page-archives ul a {
+      color: #1e90ff;
+      text-decoration: none; }
 
 @font-face {
   font-family: octicons-link;

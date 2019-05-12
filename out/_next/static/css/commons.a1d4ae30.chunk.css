@@ -1,31 +1,21 @@
 @import url(https://fonts.googleapis.com/css?family=Noto+Sans+SC:400,700);
-header {
+.component-header {
   display: flex;
   max-width: 48rem;
   margin: 0 auto;
   justify-content: space-between;
   align-items: center; }
-
-header a {
-  color: #2f3542;
-  text-decoration: none; }
-
-header a:after {
-  border: 0 solid #7bed9f;
-  transition: all 1s;
-  content: '';
-  position: absolute;
-  top: -0.1rem;
-  border-bottom: 0; }
-
-header a:hover:after {
-  border-bottom: 1rem; }
-
-.title {
-  font-family: "Chancery", cursive, sans-serif; }
-
-.link {
-  margin: 0 0.4rem; }
+  .component-header .title {
+    font-family: 'Chancery', cursive, sans-serif;
+    color: #2f3542; }
+  .component-header ul.nav-items {
+    display: inline; }
+    .component-header ul.nav-items li {
+      display: inline;
+      padding: 0 0.2rem; }
+    .component-header ul.nav-items a {
+      color: #2f3542;
+      text-decoration: none; }
 
 .main {
   max-width: 48rem;
