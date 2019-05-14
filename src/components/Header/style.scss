@@ -1,33 +1,29 @@
-header { 
+@charset 'utf-8';
+@import 'static/color.scss';
+
+.component-header {
   display: flex;
   max-width: 48rem;
   margin: 0 auto;
   justify-content: space-between;
   align-items: center;
-}
 
-header a {
-  color: #2f3542;
-  text-decoration: none;
-}
+  .title {
+    font-family: 'Chancery', cursive, sans-serif;
+    color: $black;
+  }
 
-header a:after {
-  border: 0 solid #7bed9f;
-  transition: all 1s;
-  content: '';
-  position: absolute;
-  top: -0.1rem;
-  border-bottom: 0;
-}
+  ul.nav-items {
+    display: inline;
 
-header a:hover:after {
-  border-bottom: 1rem;
-}
+    li {
+      display: inline;
+      padding: 0 0.2rem;
+    }
 
-.title {
-  font-family: "Chancery", cursive, sans-serif;
-}
-
-.link {
-  margin: 0 0.4rem;
+    a {
+      color: $black;
+      text-decoration: none;
+    }
+  }
 }

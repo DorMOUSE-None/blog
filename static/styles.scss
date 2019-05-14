@@ -1,3 +1,6 @@
+@charset 'utf-8';
+@import 'static/color.scss';
+
 .page-about {
   font-size: 20px;
   margin: 0 auto;
@@ -95,5 +98,26 @@
 }
 
 .page-post {
+}
 
+.page-archives {
+  display: flex;
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    li {
+      list-style: '🚀 ' outside;
+    }
+
+    span.date {
+      margin: 0 1rem 0 0;
+      color: $gray;
+    }
+
+    a {
+      color: $primary-color;
+      text-decoration: none;
+    }
+  }
 }

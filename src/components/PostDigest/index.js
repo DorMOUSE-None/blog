@@ -1,12 +1,5 @@
-
-const PostDigest = (props) => {
-
-  return (
-    <div>
-      AAAA
-    </div>
-  );
-
-}
+const PostDigest = props => {
+  return <div dangerouslySetInnerHTML={{__html: props.digest}} />;
+};
 
 export default PostDigest;

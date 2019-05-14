@@ -22,6 +22,7 @@
     "react-dom": "^16.8.6"
   },
   "devDependencies": {
+    "js-yaml": "^3.13.1",
     "processmd": "^4.4.2",
     "rehype-katex": "^1.2.0",
     "rehype-stringify": "^5.0.0",
@@ -30,6 +31,7 @@
     "remark-html": "^9.0.0",
     "remark-math": "^1.0.6",
     "remark-parse": "^6.0.3",
+    "remark-parse-yaml": "0.0.2",
     "remark-rehype": "^4.0.0",
     "remark-stringify": "^6.0.4",
     "remark-toc": "^5.1.1",

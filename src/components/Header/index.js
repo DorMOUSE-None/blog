@@ -5,15 +5,15 @@ import './style.scss';
 
 const Header = props => {
   return (
-    <header>
+    <header className="component-header">
       <h1 className="title">ffutop</h1>
-      <div>
+      <ul className="nav-items">
         {routers.map(router => (
-          <a key={router.name} href={process.env.PREFIX_PATH + router.path}>
-            {router.title}
-          </a>
+          <li key={router.name}>
+            <a href={process.env.PREFIX_PATH + router.path}>{router.title}</a>
+          </li>
         ))}
-      </div>
+      </ul>
     </header>
   );
 };
