@@ -77,6 +77,8 @@
 
 .component-post-digest {
   margin: 2rem 0; }
+  .component-post-digest a {
+    text-decoration: none; }
 
 @font-face {
   font-family: octicons-link;
