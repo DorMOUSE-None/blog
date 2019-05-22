@@ -77,8 +77,11 @@
 
 .component-post-digest {
   margin: 2rem 0; }
+  .component-post-digest h1.title {
+    font-size: 1.4rem; }
   .component-post-digest a {
-    text-decoration: none; }
+    text-decoration: none;
+    color: #2f3542; }
 
 @font-face {
   font-family: octicons-link;
