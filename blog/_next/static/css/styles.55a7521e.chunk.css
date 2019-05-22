@@ -1,4 +1,8 @@
 @charset "UTF-8";
+a {
+  color: #2f3542;
+  text-decoration: none; }
+
 .page-about {
   font-size: 20px;
   margin: 0 auto;
@@ -82,6 +86,12 @@
   .component-post-digest a {
     text-decoration: none;
     color: #2f3542; }
+  .component-post-digest hr {
+    color: #dfe4ea; }
+
+div.component-page-turner {
+  display: flex;
+  justify-content: space-between; }
 
 @font-face {
   font-family: octicons-link;
