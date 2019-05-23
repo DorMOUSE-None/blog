@@ -1,0 +1,19 @@
+@import 'static/color.scss';
+
+.component-post-digest {
+
+  margin: 2rem 0;
+
+  h1.title {
+    font-size: 1.4rem;
+  }
+
+  a {
+    text-decoration: none;
+    color: $black;
+  }
+
+  hr {
+    color: $city-lights;
+  }
+}

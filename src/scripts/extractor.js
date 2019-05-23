@@ -14,7 +14,6 @@ function extractor(options) {
 
   function transformer(tree, file) {
     visit(tree, 'yaml', extractYaml);
-    //visit(tree,  extractToc);
 
     function extractYaml(node) {
       const doc = yaml.safeLoad(node.value);
@@ -25,6 +24,5 @@ function extractor(options) {
     }
 
     function extractToc(node) {}
-
   }
 }

@@ -1,0 +1,17 @@
+@import 'static/color.scss';
+
+.component-post-header {
+  margin: 0.9375rem 0;
+
+  .title {
+    margin: 0;
+  }
+
+  .date {
+    color: $grisaille;
+    font-size: 0.875rem;
+    span {
+      text-decoration: underline dashed;
+    }
+  }
+}

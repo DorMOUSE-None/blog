@@ -24,7 +24,8 @@ const constructor = mdDatas => {
 };
 
 const constructPageIndex = mdDatas => {
-  const items = mdDatas.length;
+  const mdDatasR = mdDatas.reverse();
+  const items = mdDatasR.length;
   const pages = Math.ceil(items / config.itemsPerPage);
 
   const router = {};
@@ -33,7 +34,7 @@ const constructPageIndex = mdDatas => {
     router[genIndexUrl(pageId)] = {
       page: '/index',
       query: {
-        mdDatasParts: mdDatas.slice(
+        mdDatasParts: mdDatasR.slice(
           pageId * config.itemsPerPage,
           (pageId + 1) * config.itemsPerPage - 1,
         ),
@@ -43,6 +44,8 @@ const constructPageIndex = mdDatas => {
       },
     };
   }
+
+  router['/'] = router[genIndexUrl(0)];
 
   return router;
 };

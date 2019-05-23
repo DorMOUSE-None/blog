@@ -8,7 +8,7 @@ const Post = props => {
   return (
     <MainContainer>
       <div className="page-post">
-        <div dangerouslySetInnerHTML={{__html: content}} />
+        <div className="markdown-content" dangerouslySetInnerHTML={{__html: content}} />
       </div>
     </MainContainer>
   );

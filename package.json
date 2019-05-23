@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "NODE_PATH=./ next",
+    "dev": "NODE_PATH=./ next dev",
     "build": "NODE_PATH=./ next build",
     "build:content": "processmd content/**/*.md --outputDir content --preview 11 --previewDelimiter '<!-- more -->' --summaryOutput content/summary.json",
     "start": "NODE_PATH=./ next start",
-    "export": "npm run build && NODE_PATH=./ next export",
-    "deploy": "rm -rf node_modules/.cache .next/ out/ && NODE_PATH=./ next build && NODE_PATH=./ next export && touch out/.nojekyll && git add out/ && git commit -m \"Deploy Next.js to gh-pages\" && git subtree push --prefix out origin gh-pages"
+    "export": "npm run build && NODE_PATH=./ next export -o blog",
+    "deploy": "rm -rf node_modules/.cache .next/ blog/ && NODE_PATH=./ next build && NODE_PATH=./ next export -o blog && touch blog/.nojekyll && git add blog/ && git commit -m \"Deploy Next.js to gh-pages\" && git subtree push --prefix blog origin gh-pages"
   },
   "author": "ffutop",
   "license": "MIT",

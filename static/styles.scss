@@ -1,6 +1,11 @@
 @charset 'utf-8';
 @import 'static/color.scss';
 
+a {
+  color: $black;
+  text-decoration: none;
+}
+
 .page-about {
   font-size: 20px;
   margin: 0 auto;
